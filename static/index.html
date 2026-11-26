@@ -313,6 +313,60 @@
             font-weight: 700;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
+        .bb-level-bar {
+            display: flex;
+            background: #e2e8f0;
+            padding: 3px;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            gap: 3px;
+        }
+        .bb-level-btn {
+            flex: 1;
+            padding: 0.32rem 0.45rem;
+            text-align: center;
+            font-size: 0.73rem;
+            font-weight: 700;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+        .bb-level-btn:hover {
+            color: #0f172a;
+        }
+        .bb-level-btn.active {
+            background: white;
+            color: #ea580c;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .bb-miss-badge {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.8);
+            background: #ef4444;
+            color: white;
+            font-size: 0.76rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 40;
+        }
+        .bb-miss-badge.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.05);
+        }
         .bb-arena {
             position: relative;
             width: 100%;
@@ -1066,14 +1120,30 @@
                             <div class="bb-header">
                                 <div>
                                     <div class="bb-title">Upload files</div>
-                                    <div class="bb-subtitle">Drag and drop, or take the shot.</div>
+                                    <div class="bb-subtitle" id="bbDifficultyDesc">👶 Noob: Basket in center</div>
                                 </div>
                                 <div class="bb-score-pill" title="Total successful shots">
                                     Uploaded <span id="bbScoreCount">0</span>
                                 </div>
                             </div>
 
+                            <!-- 3 Difficulty Levels: Noob, Average, Pro -->
+                            <div class="bb-level-bar">
+                                <button type="button" class="bb-level-btn active" id="btnLevelNoob" onclick="setBbDifficulty('noob')">
+                                    👶 Noob
+                                </button>
+                                <button type="button" class="bb-level-btn" id="btnLevelAverage" onclick="setBbDifficulty('average')">
+                                    🎯 Average (Far)
+                                </button>
+                                <button type="button" class="bb-level-btn" id="btnLevelPro" onclick="setBbDifficulty('pro')">
+                                    🔥 Pro (Moving Target)
+                                </button>
+                            </div>
+
                             <div class="bb-arena" id="bbArena">
+                                <!-- Miss / Brick Badge -->
+                                <div class="bb-miss-badge" id="bbMissBadge">🧱 BRICK! Try Again!</div>
+
                                 <!-- Dashed Drop Target -->
                                 <div class="bb-dropzone" id="bbDropZone" onclick="document.getElementById('fileInput').click()">
                                     <svg class="bb-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1557,6 +1627,7 @@
     const bbCourt = document.getElementById('bbCourt');
     const bbArena = document.getElementById('bbArena');
     const bbDropZone = document.getElementById('bbDropZone');
+    const bbHoop = document.getElementById('bbHoop');
     const bbTrajectorySvg = document.getElementById('bbTrajectorySvg');
     const bbNet = document.getElementById('bbNet');
     const bbFileBall = document.getElementById('bbFileBall');
@@ -1565,13 +1636,127 @@
     const bbLoadedCard = document.getElementById('bbLoadedCard');
     const bbLoadedName = document.getElementById('bbLoadedName');
     const bbLoadedMeta = document.getElementById('bbLoadedMeta');
+    const bbDifficultyDesc = document.getElementById('bbDifficultyDesc');
+    const bbMissBadge = document.getElementById('bbMissBadge');
 
     let bbScore = 0;
     let isBbDragging = false;
+    let currentBbDifficulty = 'noob'; // 'noob', 'average', 'pro'
     let bbBallOrigin = { x: 24, y: 194 };
-    let bbHoopTarget = { x: 215, y: 145 };
+    let bbHoopTarget = { x: 215, y: 142 };
+    let bbHoopCurrentX = 215;
+    let bbHoopCurrentY = 142;
+    let bbHoopPhase = 0;
+    let bbHoopSpeed = 0.032;
+    let bbProAnimId = null;
     let bbParticles = [];
     let bbGameInitialized = false;
+
+    // Difficulty Settings: Noob, Average, Pro
+    function setBbDifficulty(level) {
+        currentBbDifficulty = level;
+
+        const btnNoob = document.getElementById('btnLevelNoob');
+        const btnAvg = document.getElementById('btnLevelAverage');
+        const btnPro = document.getElementById('btnLevelPro');
+
+        if (btnNoob) btnNoob.classList.toggle('active', level === 'noob');
+        if (btnAvg) btnAvg.classList.toggle('active', level === 'average');
+        if (btnPro) btnPro.classList.toggle('active', level === 'pro');
+
+        const width = bbArena ? (bbArena.offsetWidth || 400) : 400;
+
+        if (level === 'noob') {
+            stopProHoopLoop();
+            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "👶 Noob: Easy buckets, basket in the center";
+            bbHoopCurrentX = width / 2;
+            bbHoopCurrentY = 142;
+            bbHoopTarget = { x: bbHoopCurrentX, y: bbHoopCurrentY };
+
+            if (bbHoop) {
+                bbHoop.style.transition = 'all 0.4s ease';
+                bbHoop.style.left = '50%';
+                bbHoop.style.top = '96px';
+                bbHoop.style.transform = 'translateX(-50%) scale(1.0)';
+            }
+            if (bbDropZone) {
+                bbDropZone.style.transition = 'all 0.4s ease';
+                bbDropZone.style.left = '50%';
+                bbDropZone.style.top = '16px';
+                bbDropZone.style.transform = 'translateX(-50%) scale(1.0)';
+            }
+        } else if (level === 'average') {
+            stopProHoopLoop();
+            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "🎯 Average: Basket is placed farther away in the corner";
+            bbHoopCurrentX = width * 0.82;
+            bbHoopCurrentY = 82;
+            bbHoopTarget = { x: bbHoopCurrentX, y: bbHoopCurrentY };
+
+            if (bbHoop) {
+                bbHoop.style.transition = 'all 0.4s ease';
+                bbHoop.style.left = '82%';
+                bbHoop.style.top = '36px';
+                bbHoop.style.transform = 'translateX(-50%) scale(0.78)';
+            }
+            if (bbDropZone) {
+                bbDropZone.style.transition = 'all 0.4s ease';
+                bbDropZone.style.left = '82%';
+                bbDropZone.style.top = '6px';
+                bbDropZone.style.transform = 'translateX(-50%) scale(0.78)';
+            }
+        } else if (level === 'pro') {
+            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "🔥 Pro: Basket moves when you aim! Timing & luck required!";
+            if (bbHoop) {
+                bbHoop.style.transition = 'none';
+                bbHoop.style.top = '90px';
+                bbHoop.style.transform = 'translateX(-50%) scale(0.88)';
+            }
+            if (bbDropZone) {
+                bbDropZone.style.transition = 'none';
+                bbDropZone.style.top = '12px';
+                bbDropZone.style.transform = 'translateX(-50%) scale(0.88)';
+            }
+            startProHoopLoop();
+        }
+
+        drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
+    }
+
+    function startProHoopLoop() {
+        stopProHoopLoop();
+        function loop() {
+            if (currentBbDifficulty !== 'pro') return;
+            const width = bbArena ? (bbArena.offsetWidth || 400) : 400;
+            bbHoopPhase += bbHoopSpeed;
+
+            const minX = 70;
+            const maxX = width - 70;
+            bbHoopCurrentX = (minX + maxX) / 2 + Math.sin(bbHoopPhase) * ((maxX - minX) / 2);
+            bbHoopCurrentY = 138;
+            bbHoopTarget = { x: bbHoopCurrentX, y: bbHoopCurrentY };
+
+            if (bbHoop) {
+                bbHoop.style.left = `${bbHoopCurrentX}px`;
+            }
+            if (bbDropZone) {
+                bbDropZone.style.left = `${bbHoopCurrentX}px`;
+            }
+
+            if (!isBbDragging) {
+                drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopCurrentX, bbHoopCurrentY);
+            }
+
+            bbProAnimId = requestAnimationFrame(loop);
+        }
+        bbProAnimId = requestAnimationFrame(loop);
+    }
+
+    function stopProHoopLoop() {
+        if (bbProAnimId) {
+            cancelAnimationFrame(bbProAnimId);
+            bbProAnimId = null;
+        }
+    }
 
     // Web Audio Synthesized Swish Sound (zero external assets)
     function playSwishSound() {
@@ -1604,17 +1789,37 @@
         } catch(e) {}
     }
 
+    // Web Audio Synthesized Clank / Brick Sound for missed shots
+    function playClankSound() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(145, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.22);
+            gain.gain.setValueAtTime(0.5, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.24);
+        } catch(e) {}
+    }
+
     // Confetti particles for swish celebration
     function burstBbConfetti(x, y) {
         if (!bbConfettiCanvas) return;
         const colors = ['#ea580c', '#f97316', '#ef4444', '#fbbf24', '#38bdf8', '#22c55e'];
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 42; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 6.5 + 2;
+            const speed = Math.random() * 6.5 + 2.5;
             bbParticles.push({
                 x, y,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 2.5,
+                vy: Math.sin(angle) * speed - 2.8,
                 size: Math.random() * 5 + 3,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 life: 1,
@@ -1671,6 +1876,8 @@
         let progress = 0;
         const startX = releaseX !== undefined ? releaseX : bbBallOrigin.x + 29;
         const startY = releaseY !== undefined ? releaseY : bbBallOrigin.y + 36;
+
+        // In Pro mode: target is snapshot of where hoop was aimed
         const targetX = bbHoopTarget.x;
         const targetY = bbHoopTarget.y;
         const controlX = (startX + targetX) / 2 - 20;
@@ -1681,26 +1888,48 @@
         function anim() {
             progress += 0.04;
             if (progress >= 1) {
-                // Reached basket rim!
-                bbFileBall.style.left = `${targetX - 29}px`;
-                bbFileBall.style.top = `${targetY - 20}px`;
-                bbFileBall.style.transform = `scale(0.55)`;
-
-                // Swish!
-                playSwishSound();
-                if (bbNet) {
-                    bbNet.classList.remove('swish');
-                    void bbNet.offsetWidth; // trigger reflow
-                    bbNet.classList.add('swish');
+                // Check Hit or Miss based on level
+                let isHit = true;
+                if (currentBbDifficulty === 'pro') {
+                    // Check if the moving hoop is near the ball's final X
+                    const diff = Math.abs(targetX - bbHoopCurrentX);
+                    isHit = diff <= 44;
                 }
-                burstBbConfetti(targetX, targetY);
 
-                bbScore++;
-                if (bbScoreCount) bbScoreCount.textContent = bbScore;
+                if (isHit) {
+                    // Reached basket rim!
+                    bbFileBall.style.left = `${(currentBbDifficulty === 'pro' ? bbHoopCurrentX : targetX) - 29}px`;
+                    bbFileBall.style.top = `${targetY - 20}px`;
+                    bbFileBall.style.transform = `scale(0.55)`;
 
-                if (onScored) onScored();
-                else if (!selectedFile) {
-                    setTimeout(() => { fileInput.click(); }, 200);
+                    // Swish!
+                    playSwishSound();
+                    if (bbNet) {
+                        bbNet.classList.remove('swish');
+                        void bbNet.offsetWidth; // trigger reflow
+                        bbNet.classList.add('swish');
+                    }
+                    burstBbConfetti(currentBbDifficulty === 'pro' ? bbHoopCurrentX : targetX, targetY);
+
+                    bbScore++;
+                    if (bbScoreCount) bbScoreCount.textContent = bbScore;
+
+                    if (onScored) onScored();
+                    else if (!selectedFile) {
+                        setTimeout(() => { fileInput.click(); }, 200);
+                    }
+                } else {
+                    // Miss / Brick!
+                    playClankSound();
+                    if (bbMissBadge) {
+                        bbMissBadge.textContent = "🧱 BRICK! Time it better!";
+                        bbMissBadge.classList.add('show');
+                        setTimeout(() => { bbMissBadge.classList.remove('show'); }, 1200);
+                    }
+                    // Bounce off
+                    bbFileBall.style.left = `${targetX + 35}px`;
+                    bbFileBall.style.top = `${targetY + 45}px`;
+                    bbFileBall.style.transform = 'scale(0.7) rotate(90deg)';
                 }
 
                 // Reset back to starting spot smoothly
@@ -1713,7 +1942,7 @@
                         bbFileBall.style.transition = 'none';
                         drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
                     }, 350);
-                }, 450);
+                }, isHit ? 450 : 600);
                 return;
             }
 
@@ -1747,7 +1976,6 @@
             bbConfettiCanvas.height = height;
         }
 
-        bbHoopTarget = { x: width / 2, y: 142 };
         bbBallOrigin = { x: 24, y: height - 92 };
 
         if (bbFileBall) {
@@ -1756,7 +1984,7 @@
             bbFileBall.style.transform = 'scale(1) rotate(0deg)';
         }
 
-        drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
+        setBbDifficulty(currentBbDifficulty);
 
         if (!bbGameInitialized && bbFileBall) {
             bbGameInitialized = true;
@@ -1768,6 +1996,13 @@
                 const rect = bbArena.getBoundingClientRect();
                 const curX = e.clientX - rect.left;
                 const curY = e.clientY - rect.top;
+
+                // In Pro mode: basket accelerates when user tries to aim!
+                if (currentBbDifficulty === 'pro') {
+                    bbHoopSpeed = 0.075;
+                    bbHoopPhase += (Math.random() - 0.5) * 0.6; // random dodge
+                }
+
                 drawBbTrajectory(curX, curY, bbHoopTarget.x, bbHoopTarget.y);
             });
 
@@ -1785,6 +2020,12 @@
                 if (!isBbDragging) return;
                 isBbDragging = false;
                 bbFileBall.classList.remove('grabbing');
+
+                // Return speed to normal
+                if (currentBbDifficulty === 'pro') {
+                    bbHoopSpeed = 0.035;
+                }
+
                 const rect = bbArena.getBoundingClientRect();
                 const releaseX = e.clientX - rect.left;
                 const releaseY = e.clientY - rect.top;
