@@ -655,6 +655,22 @@
                         <small>Zero-downtime auto-fallback across verified models</small>
                     </div>
 
+                    <!-- BYOK: Bring Your Own Key (Mandatory) -->
+                    <div class="form-group" style="background:#f8fafc; padding:0.9rem; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; margin-top:1.2rem;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.35rem;">
+                            <label for="apiKeyInput" style="margin:0; font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:0.35rem;">
+                                🔑 Gemini API Key <span style="color:var(--danger); font-size:0.75rem;">(Required)</span>
+                            </label>
+                            <button type="button" onclick="toggleApiKeyVisibility()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.76rem; font-weight:600; text-decoration:underline;">
+                                <span id="toggleKeyText">Show</span>
+                            </button>
+                        </div>
+                        <input type="password" id="apiKeyInput" placeholder="Paste your API key (AIzaSy...)" style="background:white; font-family:monospace; font-size:0.85rem;">
+                        <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.35rem; display:block; line-height:1.4;">
+                            Get a free key in 30 sec at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary); font-weight:700; text-decoration:underline;">Google AI Studio</a>. Saved securely in your browser only.
+                        </small>
+                    </div>
+
                     <!-- Extract Button -->
                     <button class="btn btn-primary" id="extractBtn" disabled onclick="startExtraction()">
                         🚀 Extract to Quick Clause JSON
@@ -754,6 +770,9 @@
     const resultsCard = document.getElementById('resultsCard');
     const errorCard = document.getElementById('errorCard');
 
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const toggleKeyText = document.getElementById('toggleKeyText');
+
     let selectedFile = null;
     let extractedData = null;
     let totalPdfPages = 0;
@@ -788,6 +807,32 @@
 
         updateStepVisuals(0);
         showToast('🏠 Ready for new PDF extraction');
+    }
+
+    // BYOK: Load saved API key on startup and save on input
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedKey = localStorage.getItem('byok_gemini_key') || '';
+        if (savedKey) apiKeyInput.value = savedKey;
+    });
+
+    apiKeyInput.addEventListener('input', (e) => {
+        const key = e.target.value.trim();
+        if (key) {
+            localStorage.setItem('byok_gemini_key', key);
+            apiKeyInput.style.borderColor = '#cbd5e1';
+        } else {
+            localStorage.removeItem('byok_gemini_key');
+        }
+    });
+
+    function toggleApiKeyVisibility() {
+        if (apiKeyInput.type === 'password') {
+            apiKeyInput.type = 'text';
+            toggleKeyText.textContent = 'Hide';
+        } else {
+            apiKeyInput.type = 'password';
+            toggleKeyText.textContent = 'Show';
+        }
     }
 
     // File input change
@@ -894,6 +939,15 @@
     async function startExtraction() {
         if (!selectedFile) return;
 
+        // BYOK: Verify API Key is provided
+        const userApiKey = apiKeyInput.value.trim();
+        if (!userApiKey) {
+            apiKeyInput.style.borderColor = 'var(--danger)';
+            apiKeyInput.focus();
+            showToast('🔑 Please enter your Gemini API Key to proceed!');
+            return;
+        }
+
         resultsCard.style.display = 'none';
         errorCard.style.display = 'none';
         extractBtn.disabled = true;
@@ -940,6 +994,7 @@
 
         const formData = new FormData();
         formData.append('file', selectedFile);
+        formData.append('api_key', userApiKey);
         formData.append('model', document.getElementById('modelSelect').value);
 
         if (limiterBox.classList.contains('active')) {

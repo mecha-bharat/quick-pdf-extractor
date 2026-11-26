@@ -75,13 +75,17 @@ MAX_RETRIES_PER_MODEL = 2
 INITIAL_BACKOFF_SECONDS = 1.5
 
 
-def get_gemini_client():
-    if not GEMINI_API_KEY:
+def get_gemini_client(user_api_key: str = None):
+    key = (user_api_key or "").strip() or GEMINI_API_KEY
+    if not key:
         raise HTTPException(
-            status_code=500,
-            detail="GEMINI_API_KEY is not set. Please set it in your .env file.",
+            status_code=400,
+            detail=(
+                "Gemini API Key is required! Please enter your own API key in the web interface. "
+                "You can get a free key in 30 seconds from https://aistudio.google.com/apikey"
+            ),
         )
-    return genai.Client(api_key=GEMINI_API_KEY)
+    return genai.Client(api_key=key)
 
 
 def call_gemini_with_retry(client, model: str, uploaded_file, prompt: str):
@@ -365,6 +369,7 @@ async def inspect_pdf(file: UploadFile = File(...)):
 @app.post("/api/extract")
 async def extract_pdf(
     file: UploadFile = File(...),
+    api_key: str = Form(default=""),  # BYOK (Bring Your Own Key)
     mode: str = Form(default="full"),  # 'full', 'page_range', or 'section_range'
     start_page: int = Form(default=1),
     end_page: int = Form(default=0),
@@ -375,6 +380,7 @@ async def extract_pdf(
     Upload a legal Act PDF and extract structured JSON.
 
     - **file**: PDF file to process
+    - **api_key**: User's Gemini API key (BYOK)
     - **mode**: 'full' | 'page_range' | 'section_range'
     - **start_page**: Starting page number (1-indexed) if mode is page_range
     - **end_page**: Ending page number (inclusive) if mode is page_range
@@ -436,8 +442,8 @@ async def extract_pdf(
         range_text = section_range.strip() if section_range else None
         prompt = get_extraction_prompt(section_range=range_text, page_info=page_info)
 
-        # Initialize Gemini client and upload file
-        client = get_gemini_client()
+        # Initialize Gemini client with user's key (BYOK)
+        client = get_gemini_client(user_api_key=api_key)
 
         upload_size = os.path.getsize(file_to_upload)
         logger.info(f"Uploading PDF ({upload_size} bytes) to Gemini Files API...")
