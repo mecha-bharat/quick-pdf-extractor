@@ -162,12 +162,27 @@ SUBSECTION IDENTIFIERS:
 - If a section begins with unnumbered introductory content followed by clauses, keep sub_section_no blank for the introductory content (e.g. description: "In this Act..."), and child clauses get "2(a)", "2(b)", etc.
 
 ================================================================================
-RULE 6: DESCRIPTION FORMATTING
+RULE 6: DESCRIPTION FORMATTING — ABSOLUTELY NO SECTION OR SUBSECTION NUMBERS IN DESCRIPTION!
 ================================================================================
-- The description field must contain only the statutory content of that specific provision.
-- Do NOT repeat the structural identifier inside the description.
-  Incorrect: "sub_section_no": "5(2)(a)", "description": "(a) the Chairman;"
-  Correct: "sub_section_no": "5(2)(a)", "description": "the Chairman;"
+CRITICAL REQUIREMENT:
+- The "description" field must contain ONLY the statutory content of that specific provision.
+- ABSOLUTELY NEVER REPEAT THE SECTION NUMBER, MARGINAL HEADING, SUBSECTION NUMBER, OR CLAUSE IDENTIFIER AT THE START OF THE DESCRIPTION!
+  Examples:
+  ❌ INCORRECT: "section_no": "30", "description": "30. Procedure applicable to occupation...—The procedure hereinbefore provided..."
+  ✅ CORRECT:   "section_no": "30", "description": "The procedure hereinbefore provided..."
+
+  ❌ INCORRECT: "section_no": "30", "description": "30. The procedure hereinbefore provided..."
+  ✅ CORRECT:   "section_no": "30", "description": "The procedure hereinbefore provided..."
+
+  ❌ INCORRECT: "sub_section_no": "30(1)", "description": "(1) The State Government may make rules..."
+  ✅ CORRECT:   "sub_section_no": "30(1)", "description": "The State Government may make rules..."
+
+  ❌ INCORRECT: "sub_section_no": "3(2)(a)", "description": "(a) the Chancellor, ex officio;"
+  ✅ CORRECT:   "sub_section_no": "3(2)(a)", "description": "the Chancellor, ex officio;"
+
+  ❌ INCORRECT: "section_name": "Interpretation", "description": "Interpretation.—In this Act, unless..."
+  ✅ CORRECT:   "section_name": "Interpretation", "description": "In this Act, unless..."
+
 - Remove ordinary PDF line wrapping.
 - Use meaningful line breaks (\n) only for provisos, Explanations, or internal sub-clauses of provisos.
 - Preserve actual punctuation, quotation marks, and omission symbols like [* * *].

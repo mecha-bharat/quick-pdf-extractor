@@ -283,22 +283,119 @@ def clean_editorial_references(desc: str) -> str:
     return "\n".join(lines).strip()
 
 
+def clean_leading_identifiers(desc: str, section_no: str = "", sub_section_no: str = "", section_name: str = ""):
+    """
+    Remove redundant leading section numbers, marginal headings, subsection numbers,
+    or clause letters from description while preserving brackets and statutory text.
+    """
+    if not desc:
+        return "", sub_section_no
+
+    s = str(desc).strip()
+
+    # Never touch STATE AMENDMENTS or Quoted amendment blocks starting with quotes
+    if (
+        "state amendment" in section_name.lower()
+        or "state amendment" in s[:200].lower()
+        or s.startswith('"')
+        or s.startswith('“')
+    ):
+        return s, sub_section_no
+
+    sec_no = section_no.strip()
+    sec_name = section_name.strip()
+    sub_no = sub_section_no.strip()
+
+    # 1. Strip leading Section Number + Section Name (e.g. "30. Procedure applicable...—" or "30. Procedure applicable...")
+    if sec_no and sec_name:
+        esc_sec = re.escape(sec_no)
+        esc_name = re.escape(sec_name)
+        pattern = rf"^(\[\s*)?(?:Section\s+)?{esc_sec}\s*[\.\—\-\:\)]*\s*{esc_name}\s*[\.\—\-\:\)]*\s*"
+        m = re.match(pattern, s, re.IGNORECASE)
+        if m:
+            prefix = "[" if m.group(1) else ""
+            s = prefix + s[m.end():].strip()
+
+    # 2. Strip leading Section Name alone if repeated at start (e.g. "Procedure applicable...—The procedure...")
+    if sec_name and len(sec_name) > 3:
+        esc_name = re.escape(sec_name)
+        pattern = rf"^(\[\s*)?{esc_name}\s*[\.\—\-\:\)]+\s*"
+        m = re.match(pattern, s, re.IGNORECASE)
+        if m:
+            prefix = "[" if m.group(1) else ""
+            s = prefix + s[m.end():].strip()
+
+    # 3. Strip leading Section Number alone (e.g. "30. The procedure...", "30.—The procedure...", "[30. The procedure...")
+    if sec_no:
+        esc_sec = re.escape(sec_no)
+        pattern = rf"^(\[\s*)?(?:Section\s+)?{esc_sec}\s*[\.\—\-\:\)]+\s*"
+        m = re.match(pattern, s, re.IGNORECASE)
+        if m:
+            prefix = "[" if m.group(1) else ""
+            s = prefix + s[m.end():].strip()
+
+    # 4. Strip leading Subsection / Clause identifier (e.g. "(1) ", "[(1) ", "(2) ", "(a) ", "(i) ")
+    if sub_no:
+        m_id = re.search(r"\(([a-zA-Z0-9]+)\)$", sub_no)
+        if m_id:
+            last_id = m_id.group(1)
+            esc_id = re.escape(last_id)
+            pat_sub = rf"^(\[\s*)?\({esc_id}\)\s*[\.\—\-\:\)]*\s*"
+            m_sub = re.match(pat_sub, s, re.IGNORECASE)
+            if m_sub:
+                prefix = "[" if m_sub.group(1) else ""
+                s = prefix + s[m_sub.end():].strip()
+            else:
+                pat_sub_num = rf"^(\[\s*)?{esc_id}\s*[\.\—\-\:]+\s*"
+                m_num = re.match(pat_sub_num, s)
+                if m_num:
+                    prefix = "[" if m_num.group(1) else ""
+                    s = prefix + s[m_num.end():].strip()
+        elif re.match(r"^[0-9a-zA-Z]+$", sub_no):
+            esc_id = re.escape(sub_no)
+            pat_sub = rf"^(\[\s*)?\({esc_id}\)\s*[\.\—\-\:\)]*\s*"
+            m_sub = re.match(pat_sub, s, re.IGNORECASE)
+            if m_sub:
+                prefix = "[" if m_sub.group(1) else ""
+                s = prefix + s[m_sub.end():].strip()
+    else:
+        # If sub_section_no was empty, but description starts with "(1) " or "[(1) "
+        m_first = re.match(r"^(\[\s*)?\(([0-9a-zA-Z]+)\)\s*[\.\—\-\:\)]*\s*(.*)", s, re.DOTALL)
+        if m_first:
+            cid = m_first.group(2)
+            prefix = "[" if m_first.group(1) else ""
+            s = prefix + m_first.group(3).strip()
+            if sec_no:
+                sub_no = f"{sec_no}({cid})"
+            else:
+                sub_no = f"({cid})"
+
+    return s.strip(), sub_no
+
+
 def normalize_provision_object(obj: dict) -> list:
     """
-    1. Strips editorial footnote reference numbers and cleans section names/identifiers.
-    2. Preserves quoted amendment blocks in double quotes (namely:—\n"(a)...").
-    3. Preserves internal clauses of Provisos and Explanations.
-    4. Unbundles ordinary lettered clauses (a), (b), (c)... into separate JSON objects.
+    1. Converts Roman section numerals to Arabic integers (IV -> 4, XXX -> 30).
+    2. Strips editorial footnote reference numbers and cleans section names/identifiers.
+    3. Strips redundant leading section or subsection numbers from description.
+    4. Mandatory State Amendment preservation: keeps entire State Amendment block merged in one object.
+    5. Preserves quoted amendment blocks in double quotes (namely:—\n"(a)...").
+    6. Preserves internal clauses of Provisos and Explanations ((a),(b) or (1),(2) or (i),(ii)).
+    7. Keeps Provisos merged with their respective section / subsection description.
+    8. Unbundles ordinary child clauses (a), (b), (c)... into separate JSON objects.
     """
     desc = obj.get("description", "")
     sub_no = clean_identifier(obj.get("sub_section_no", ""))
     sec_no = clean_identifier(obj.get("section_no", ""))
     sec_name = clean_section_heading(obj.get("section_name", ""))
 
+    cleaned_desc = clean_editorial_references(desc)
+    cleaned_desc, sub_no = clean_leading_identifiers(cleaned_desc, sec_no, sub_no, sec_name)
+
     obj["section_no"] = sec_no
     obj["section_name"] = sec_name
     obj["sub_section_no"] = sub_no
-    obj["description"] = clean_editorial_references(desc)
+    obj["description"] = cleaned_desc
 
     # CASE S: If the object is a STATE AMENDMENT, DO NOT SPLIT! Keep entirely merged!
     if (
@@ -417,6 +514,14 @@ def post_process_extracted_data(data: list) -> list:
             clean_obj["section_name"] = clean_section_heading(clean_obj["section_name"])
             clean_obj["sub_section_no"] = clean_identifier(clean_obj["sub_section_no"])
             clean_obj["description"] = clean_editorial_references(clean_obj["description"])
+            clean_desc, clean_sub = clean_leading_identifiers(
+                clean_obj["description"],
+                clean_obj["section_no"],
+                clean_obj["sub_section_no"],
+                clean_obj["section_name"],
+            )
+            clean_obj["description"] = clean_desc
+            clean_obj["sub_section_no"] = clean_sub
             cleaned_list.append(clean_obj)
         else:
             cleaned_list.append(obj)
