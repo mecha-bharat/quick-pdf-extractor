@@ -177,8 +177,52 @@ def sanitize_name(name: str) -> str:
     return s[:80] or "Act_Document"
 
 
+def roman_to_int(s: str) -> int:
+    """Convert Roman numeral string to integer."""
+    roman_map = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+    s = s.upper().strip()
+    total = 0
+    prev = 0
+    for char in reversed(s):
+        val = roman_map.get(char, 0)
+        if val == 0:
+            return 0
+        if val >= prev:
+            total += val
+            prev = val
+        else:
+            total -= val
+    return total
+
+
+def convert_roman_identifier(ident: str) -> str:
+    """Convert Roman section numerals (I, II, IV, IV-A, XXX) to Arabic numbers (1, 2, 4, 4A, 30)."""
+    if not ident:
+        return ""
+    s = str(ident).strip()
+    s = re.sub(r"\.+$", "", s).strip()
+
+    # Check if section number with optional letter suffix: e.g. IV, IV-A, IVA, XXX
+    m = re.match(r"^([IVXLCDMivxlcdm]+)(?:[\s\-_]*([A-Za-z]))?$", s)
+    if m:
+        r_part = m.group(1)
+        suffix = m.group(2) or ""
+        val = roman_to_int(r_part)
+        if val > 0:
+            return f"{val}{suffix.upper()}"
+
+    # Check if subsection identifier starts with Roman numeral: e.g. IV(1), IV(2)(a)
+    m2 = re.match(r"^([IVXLCDMivxlcdm]+)(\(.*\))$", s)
+    if m2:
+        val = roman_to_int(m2.group(1))
+        if val > 0:
+            return f"{val}{m2.group(2)}"
+
+    return s
+
+
 def clean_identifier(text: str) -> str:
-    """Clean stray footnote reference numbers and brackets from structural identifiers."""
+    """Clean stray footnote reference numbers, brackets, and convert Roman numerals to Arabic numbers."""
     if not text:
         return ""
     s = str(text).strip()
@@ -186,7 +230,10 @@ def clean_identifier(text: str) -> str:
     s = re.sub(r"^\[\s*", "", s)
     s = re.sub(r"\s*\]$", "", s)
     s = re.sub(r"^Section\s+", "", s, flags=re.IGNORECASE)
-    return s.strip()
+    s = re.sub(r"\.+$", "", s).strip()
+    # Normalize 14-A -> 14A
+    s = re.sub(r"^(\d+)-([A-Za-z])$", r"\1\2", s)
+    return convert_roman_identifier(s)
 
 
 def clean_section_heading(heading: str) -> str:
@@ -253,7 +300,16 @@ def normalize_provision_object(obj: dict) -> list:
     obj["sub_section_no"] = sub_no
     obj["description"] = clean_editorial_references(desc)
 
+    # CASE S: If the object is a STATE AMENDMENT, DO NOT SPLIT! Keep entirely merged!
+    if (
+        "state amendment" in obj.get("section_name", "").lower()
+        or "state amendment" in obj.get("description", "")[:250].lower()
+        or re.search(r"STATE\s+AMENDMENT", obj.get("description", "")[:250], re.IGNORECASE)
+    ):
+        return [obj]
+
     # CASE A: If the description starts with a proviso or explanation, DO NOT SPLIT internal clauses!
+    # (Whether internal clauses are (a), (b), (c) or (1), (2), (3) or (i), (ii), (iii)!)
     if re.match(r"^\s*(?:\[\s*)?(?:Provided|Explanation)\b", obj["description"], re.IGNORECASE):
         return [obj]
 
@@ -303,13 +359,9 @@ def normalize_provision_object(obj: dict) -> list:
     if current_clause_id is not None:
         clauses.append((current_clause_id, "\n".join(current_clause_text)))
 
+    # If the provision has no ordinary child clauses (a), (b), (c)...,
+    # KEEP the Proviso merged with its respective section / sub-section description!
     if not has_clauses or len(clauses) < 2:
-        if prov_part:
-            obj1 = dict(obj)
-            obj1["description"] = main_part
-            obj2 = dict(obj)
-            obj2["description"] = prov_part
-            return [obj1, obj2]
         return [obj]
 
     # Unbundle ordinary clauses into separate JSON objects!
@@ -330,6 +382,7 @@ def normalize_provision_object(obj: dict) -> list:
         o_clause["description"] = ctext.strip()
         results.append(o_clause)
 
+    # Any trailing Proviso belongs to the parent subsection/section in statutory hierarchy
     if prov_part:
         o_prov = dict(obj)
         o_prov["sub_section_no"] = sub_no
@@ -362,6 +415,7 @@ def post_process_extracted_data(data: list) -> list:
                 clean_obj[k] = str(val) if val is not None else ""
             clean_obj["section_no"] = clean_identifier(clean_obj["section_no"])
             clean_obj["section_name"] = clean_section_heading(clean_obj["section_name"])
+            clean_obj["sub_section_no"] = clean_identifier(clean_obj["sub_section_no"])
             clean_obj["description"] = clean_editorial_references(clean_obj["description"])
             cleaned_list.append(clean_obj)
         else:

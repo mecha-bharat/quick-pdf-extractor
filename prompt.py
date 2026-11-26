@@ -33,7 +33,8 @@ RULE 2: EXTRACTION SCOPE
 - Extract only the requested Act and section range.
 - Include all inserted sections such as 2A, 5A, 8B, 14A, etc., appearing within that range.
 - If the complete Act is requested, extract all its statutory sections.
-- Exclude: Cover pages, Table of contents / Index pages, Publication details, Page numbers, Repeated page headers/footers, Watermarks (including IndiaCode watermarks), Editorial footnotes, Statement of Objects and Reasons, Appended Amendment Acts.
+- Exclude: Cover pages, Table of contents / Index pages, Publication details, Page numbers, Repeated page headers/footers, Watermarks (including IndiaCode watermarks), Editorial footnote comments at page bottoms (e.g. "1. Subs. by..."), Statement of Objects and Reasons.
+- CRITICAL: DO NOT EXCLUDE STATE AMENDMENTS! State Amendments that appear under sections (e.g. "STATE AMENDMENT - Uttar Pradesh") are part of statutory law and MUST be extracted (see Rule 14)!
 - If the PDF contains multiple Acts, extract only the requested Act.
 
 ================================================================================
@@ -46,10 +47,32 @@ RULE 3: CHAPTER FORMATTING
 - Do not use null, N/A, None, or invented chapter names.
 
 ================================================================================
-RULE 4: SECTION NUMBER AND SECTION NAME
+RULE 4: SECTION NUMBER AND SECTION NAME — ALWAYS CONVERT ROMAN TO ARABIC NUMERALS!
 ================================================================================
 - Extract the correct section number and its original marginal heading.
-- "section_no" must always be a clean string: e.g. "1", "2", "3", "14A".
+- "section_no" must ALWAYS be a clean Arabic numeric string: e.g. "1", "2", "3", "14A", "30".
+- MANDATORY ROMAN NUMERAL TO ARABIC CONVERSION:
+  If section numbers in the PDF are printed in Roman numerals (e.g., Section I, Section II, Section IV, Section VIII, Section XXX):
+  YOU MUST CONVERT THEM TO ARABIC NUMERIC VALUES:
+  "I" → "1"
+  "II" → "2"
+  "III" → "3"
+  "IV" → "4"
+  "V" → "5"
+  "VI" → "6"
+  "VII" → "7"
+  "VIII" → "8"
+  "IX" → "9"
+  "X" → "10"
+  "XI" → "11"
+  "XII" → "12"
+  "XIV" → "14"
+  "XX" → "20"
+  "XXX" → "30"
+  "IV-A" or "IVA" → "4A"
+  "XXX-A" or "XXXA" → "30A"
+- "sub_section_no" must also use the converted Arabic section number: e.g. "4(1)", "4(2)(a)" (NEVER "IV(1)").
+- NEVER leave section_no as Roman numerals like "IV", "VIII", "XXX". Always convert to "4", "8", "30".
 - NEVER include the word "Section" in "section_no".
 - NEVER include brackets "[" or "]" or footnote numbers in "section_no". If a section starts with an amendment bracket like "[ 14A." or "¹[ 3.", the section_no is "14A" or "3" (clean!).
 - Normalize inserted section numbers: 8-A → 8A, 8(A) → 8A, 20-B → 20B, 14-A → 14A.
@@ -59,15 +82,19 @@ RULE 4: SECTION NUMBER AND SECTION NAME
 - For Section 1 Preamble: use "section_no": "1" and "section_name": "Preamble" (or the printed marginal heading).
 
 ================================================================================
-RULE 5: MANDATORY CLAUSE UNBUNDLING — EVERY ORDINARY CLAUSE IS A SEPARATE OBJECT!
+RULE 5: MANDATORY CLAUSE UNBUNDLING — ORDINARY CLAUSES ONLY!
 ================================================================================
-THIS IS THE SINGLE MOST CRITICAL RULE. READ CAREFULLY:
-- When a subsection or section contains introductory text followed by ordinary clauses (a), (b), (c), (d)... or (i), (ii), (iii)...:
+THIS UNBUNDLING RULE APPLIES ONLY TO ORDINARY CHILD CLAUSES:
+- When a subsection or section contains introductory text followed by ordinary clauses (a), (b), (c), (d)...:
   YOU MUST EXTRACT THE INTRODUCTORY TEXT AND EVERY SINGLE ORDINARY CLAUSE AS ITS OWN SEPARATE JSON OBJECT!
 
-NEVER, UNDER ANY CIRCUMSTANCES, MERGE (a), (b), (c)... INTO ONE JSON DESCRIPTION!
+CRITICAL EXCEPTIONS — DO NOT UNBUNDLE THESE:
+1. PROVISOS ("Provided that..."): Internal sub-clauses of provisos ((a),(b),(c), or (1),(2),(3), or (i),(ii),(iii)) MUST REMAIN MERGED inside the proviso description! (Rule 7)
+2. EXPLANATIONS: Internal sub-clauses of Explanations MUST REMAIN MERGED! (Rule 7)
+3. QUOTED AMENDMENT BLOCKS IN DOUBLE QUOTES ("..."): MUST REMAIN MERGED! (Rule 8)
+4. STATE AMENDMENTS: MUST REMAIN FULLY MERGED as one single JSON object! (Rule 14)
 
-CORRECT EXTRACTION PATTERN:
+CORRECT EXTRACTION PATTERN FOR ORDINARY CLAUSES:
 Given source:
 (2) The following persons shall be members of the University, namely :—
 (a) the Chancellor, ex officio;
@@ -75,7 +102,7 @@ Given source:
 (c) the Secretary, Department of Education;
 Provided that if the Secretary is unable to attend, he may depute another.
 
-CORRECT JSON (EACH CLAUSE IS AN INDEPENDENT OBJECT):
+CORRECT JSON (ORDINARY CLAUSES UNBUNDLED, PROVISO MAINTAINED IN HIERARCHY):
 [
   {
     "chapter_no": "CHAPTER II",
@@ -146,25 +173,33 @@ RULE 6: DESCRIPTION FORMATTING
 - Preserve actual punctuation, quotation marks, and omission symbols like [* * *].
 
 ================================================================================
-RULE 7: PROVISO FORMATTING — WHEN DO CLAUSES STAY MERGED?
+RULE 7: PROVISO & EXPLANATION FORMATTING — INTERNAL SUB-CLAUSES MUST REMAIN MERGED!
 ================================================================================
-CLAUSES (a), (b) STAY MERGED IN ONE DESCRIPTION ONLY IN THESE SPECIFIC CASES:
+CRITICAL REQUIREMENT:
+1. NEVER UNBUNDLE INTERNAL SUB-CLAUSES OF A PROVISO OR EXPLANATION:
+   If a Proviso ("Provided that", "Provided further that", "Provided, however, that") or Explanation contains internal sub-clauses:
+   - WHETHER they are lettered: (a), (b), (c), (d)... or a., b., c.
+   - WHETHER they are numbered: (1), (2), (3)... or 1., 2., 3.
+   - WHETHER they are roman: (i), (ii), (iii), (iv)... or i., ii., iii.
+   ALL SUCH INTERNAL SUB-CLAUSES MUST REMAIN MERGED IN ONE SINGLE DESCRIPTION FIELD!
+   NEVER extract (1), (2), (3) or (i), (ii), (iii) or (a), (b), (c) of a Proviso/Explanation as separate JSON objects!
+   Format them with newlines (\n) within the description:
+   Example:
+   "description": "Main provision text.\nProvided that no such order shall be made unless—\n(i) a notice has been given;\n(ii) reasonable opportunity of being heard is afforded;\n(iii) reasons are recorded in writing."
 
-Case 1 - Contiguous Proviso (no preceding child clauses):
-- If a proviso ("Provided that", "Provided further that", "Provided, however, that") immediately follows a provision, include it in the same description using \n.
-  Example:
-  "description": "Main provision text.\nProvided that nothing herein contained shall apply to..."
-- DO NOT create artificial identifiers like 8(1)(Proviso).
-
-Case 2 - Proviso having INTERNAL sub-clauses:
-- If a proviso itself contains internal sub-clauses:
-  "Provided that,—\n(a) the terms and conditions... ;\n(b) the service rendered..."
-  THESE internal sub-clauses of the proviso MUST stay merged inside the same description!
-  Do NOT extract internal sub-clauses of a proviso as separate JSON objects.
-
-Case 3 - Proviso appearing AFTER separately extracted clauses (Sequence Rule):
-- If a proviso appears after ordinary child clauses (a), (b), (c)..., create a SEPARATE JSON object for that proviso at its original sequence position using the parent provision's sub_section_no.
-  (See example in Rule 5 above!)
+2. MERGE PROVISO WITH ITS RESPECTIVE SECTION OR SUB-SECTION (MAINTAIN PDF HIERARCHY):
+   - A Proviso along with all its internal sub-clauses belongs to its respective section or sub-section.
+   - If a subsection (e.g. 30(1)) contains a Proviso, the Proviso merges directly into that subsection's description:
+     "section_no": "30",
+     "sub_section_no": "30(1)",
+     "description": "Main subsection text.\nProvided that..."
+   - If a section without subsections contains a Proviso, it merges directly into the section description:
+     "section_no": "30",
+     "sub_section_no": "",
+     "description": "Main section text.\nProvided that..."
+   - If a subsection has ordinary child clauses (a), (b), (c) followed by a Proviso:
+     The child clauses unbundle into 3(2)(a), 3(2)(b)... and the Proviso belongs to the parent subsection 3(2).
+   - DO NOT create artificial identifiers like "30(1)(Proviso)".
 
 ================================================================================
 RULE 8: QUOTED AMENDMENT BLOCKS IN DOUBLE QUOTES ("...") MUST REMAIN MERGED!
@@ -246,7 +281,27 @@ RULE 12: DEFINITIONS SECTION
 - Sub-clauses inside a definition must be separate objects: "2(a)(i)", "2(a)(ii)".
 
 ================================================================================
-RULE 13: MANDATORY 6-KEY JSON SCHEMA
+RULE 13: STATE AMENDMENTS — MANDATORY EXTRACTION, FULLY MERGED IN ONE OBJECT!
+================================================================================
+When a section is followed by a "STATE AMENDMENT" block (e.g. for Uttar Pradesh, Maharashtra, West Bengal, etc., as found in IndiaCode / Central Acts):
+1. MANDATORY EXTRACTION: DO NOT SKIP STATE AMENDMENTS! Extract every State Amendment appearing in the requested range.
+2. FULLY MERGED IN ONE SINGLE JSON OBJECT:
+   The ENTIRE State Amendment block for that state must be extracted as ONE SINGLE JSON OBJECT!
+   - DO NOT split its newly added sections (e.g. 30-A, 30-B, 30-C...) into separate JSON objects!
+   - DO NOT unbundle its internal clauses or subsections ((1), (2), (i), (ii), (a), (b))!
+   - ALL text, headings, state names, amending act references, and provisions MUST BE MERGED in the "description" field!
+3. JSON Object Schema for State Amendments:
+   - "chapter_no": Same chapter as the parent section (or "" if no chapter)
+   - "chapter_name": Same chapter name as the parent section (or "")
+   - "section_no": Clean Arabic number of the section it appears under / amends (e.g. "30")
+   - "section_name": "STATE AMENDMENT - [State Name]" (e.g. "STATE AMENDMENT - Uttar Pradesh") or "STATE AMENDMENT" if state not specified
+   - "sub_section_no": ""
+   - "description": The entire State Amendment text from beginning to end, formatted with line breaks (\n):
+     Example:
+     "STATE AMENDMENT\nUttar Pradesh\nAddition of new section 30-A to 30-G in Act No. VIII of 1873.—After section 30 of the principal Act, the following shall be added as new sections 30-A to 30-G :\n\"30-A. Preparation of the scheme for an irrigable command area.—The Divisional Canal Officer may... The scheme shall contain—\n(i) a plan showing the site...\n(ii) a statement showing the estimated cost...\n(iii) a memorandum...\n(iv) such other particulars...\n30-B. Calling upon the Gaon Sabhas to implement the scheme.—(1) The Divisional Canal Officer shall...\n(2) The copy of the scheme shall...\""
+
+================================================================================
+RULE 14: MANDATORY 6-KEY JSON SCHEMA
 ================================================================================
 Every single JSON object must contain exactly these six keys in this order:
 {
