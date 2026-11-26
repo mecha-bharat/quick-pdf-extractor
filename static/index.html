@@ -277,23 +277,272 @@
             margin-bottom: 0.35rem;
         }
 
-        /* Upload Zone */
-        .upload-zone {
+        /* Basketball Court File Upload Widget */
+        .bb-court {
+            background: #f8fafc;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            user-select: none;
+        }
+        .bb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.85rem;
+        }
+        .bb-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+        }
+        .bb-subtitle {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-top: 0.2rem;
+        }
+        .bb-score-pill {
+            background: white;
+            color: #334155;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.2rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .bb-arena {
+            position: relative;
+            width: 100%;
+            height: 290px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            touch-action: none;
+        }
+        .bb-dropzone {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 230px;
+            height: 105px;
             border: 2px dashed #cbd5e1;
-            border-radius: var(--radius-sm);
-            padding: 1.5rem 1rem;
-            text-align: center;
+            border-radius: 12px;
+            background: #fafbfc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: #f8fafc;
+            z-index: 5;
         }
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--primary);
-            background: var(--primary-light);
+        .bb-dropzone:hover, .bb-dropzone.dragover {
+            border-color: #ea580c;
+            background: #fff7ed;
+            transform: translateX(-50%) scale(1.02);
         }
-        .upload-zone.has-file {
-            border-color: var(--success);
-            background: var(--success-light);
+        .bb-upload-icon {
+            width: 24px;
+            height: 24px;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        .bb-drop-text {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .bb-drop-sub {
+            font-size: 0.72rem;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+        .bb-hoop-container {
+            position: absolute;
+            top: 96px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 85px;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .bb-backboard {
+            width: 82px;
+            height: 52px;
+            background: #ffffff;
+            border: 3.5px solid #ea580c;
+            border-radius: 7px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .bb-backboard-inner {
+            width: 38px;
+            height: 25px;
+            border: 2.5px solid #ea580c;
+            border-radius: 3px;
+            position: absolute;
+            bottom: 4px;
+        }
+        .bb-rim {
+            position: absolute;
+            bottom: -8px;
+            width: 56px;
+            height: 15px;
+            border: 4px solid #ea580c;
+            border-radius: 50%;
+            background: transparent;
+            transform: perspective(100px) rotateX(30deg);
+            z-index: 12;
+        }
+        .bb-net {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 46px;
+            height: 38px;
+            pointer-events: none;
+            z-index: 9;
+            transform-origin: top center;
+        }
+        .bb-net.swish {
+            animation: netSwish 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes netSwish {
+            0% { transform: translateX(-50%) scale(1, 1); }
+            25% { transform: translateX(-50%) scale(1.3, 0.8) translateY(6px); }
+            50% { transform: translateX(-50%) scale(0.85, 1.25) translateY(-3px); }
+            75% { transform: translateX(-50%) scale(1.08, 0.95); }
+            100% { transform: translateX(-50%) scale(1, 1); }
+        }
+        .bb-file-ball {
+            position: absolute;
+            bottom: 20px;
+            left: 24px;
+            width: 58px;
+            height: 72px;
+            cursor: grab;
+            z-index: 25;
+            touch-action: none;
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.12));
+            transition: transform 0.05s ease-out;
+        }
+        .bb-file-ball:hover {
+            transform: translateY(-2px) scale(1.04);
+        }
+        .bb-file-ball.grabbing {
+            cursor: grabbing;
+            filter: drop-shadow(0 14px 20px rgba(234, 88, 12, 0.4));
+        }
+        .bb-file-card {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .bb-file-corner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 15px 15px 0;
+            border-color: transparent #cbd5e1 transparent transparent;
+        }
+        .bb-file-icon {
+            font-size: 1.35rem;
+            line-height: 1;
+        }
+        .bb-file-pdf-tag {
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+        .bb-trajectory {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+        }
+        .bb-confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 30;
+        }
+        .bb-loaded-card {
+            margin-top: 0.75rem;
+            background: white;
+            border: 1.5px solid #bbf7d0;
+            border-radius: var(--radius-sm);
+            padding: 0.6rem 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .bb-loaded-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+        .bb-pdf-badge-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+        .bb-loaded-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+        }
+        .bb-loaded-meta {
+            font-size: 0.72rem;
+            color: #64748b;
+        }
+
+        /* Upload Zone fallback */
+        .upload-zone {
+            display: none;
         }
 
         /* Limiter Box (> 15 Pages Alert) */
@@ -811,16 +1060,79 @@
                         </div>
                     </div>
 
-                    <!-- Method 2: Direct File Upload -->
+                    <!-- Method 2: Direct File Upload with Basketball Game -->
                     <div id="methodUploadBlock" style="display:none;">
-                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" style="width:36px; height:36px; color:#94a3b8; margin-bottom:0.4rem;">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                            </svg>
-                            <p style="font-size:0.85rem; color:var(--text-muted);">Click or drag &amp; drop PDF file here</p>
-                            <div id="fileName" style="font-weight:700; font-size:0.88rem; margin-top:0.3rem;"></div>
-                            <div id="pageBadge"></div>
+                        <div class="bb-court" id="bbCourt">
+                            <div class="bb-header">
+                                <div>
+                                    <div class="bb-title">Upload files</div>
+                                    <div class="bb-subtitle">Drag and drop, or take the shot.</div>
+                                </div>
+                                <div class="bb-score-pill" title="Total successful shots">
+                                    Uploaded <span id="bbScoreCount">0</span>
+                                </div>
+                            </div>
+
+                            <div class="bb-arena" id="bbArena">
+                                <!-- Dashed Drop Target -->
+                                <div class="bb-dropzone" id="bbDropZone" onclick="document.getElementById('fileInput').click()">
+                                    <svg class="bb-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                    </svg>
+                                    <div class="bb-drop-text">Drop files here</div>
+                                    <div class="bb-drop-sub">or take the shot</div>
+                                </div>
+
+                                <!-- Trajectory SVG -->
+                                <svg class="bb-trajectory" id="bbTrajectorySvg"></svg>
+
+                                <!-- Basketball Hoop -->
+                                <div class="bb-hoop-container" id="bbHoop">
+                                    <div class="bb-backboard">
+                                        <div class="bb-backboard-inner"></div>
+                                    </div>
+                                    <div class="bb-rim">
+                                        <div class="bb-net" id="bbNet">
+                                            <svg viewBox="0 0 60 45" style="width:100%; height:100%;">
+                                                <path d="M5,0 L15,18 L5,36 L15,45 M15,0 L25,18 L15,36 L25,45 M25,0 L35,18 L25,36 L35,45 M35,0 L45,18 L35,36 L45,45 M45,0 L55,18 L45,36 L55,45 M55,0 L45,18 L55,36 L45,45 M5,12 L55,12 M8,24 L52,24 M12,36 L48,36" stroke="#94a3b8" stroke-width="1.8" fill="none" opacity="0.85"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Draggable / Throwable PDF File Ball -->
+                                <div class="bb-file-ball" id="bbFileBall" title="Drag me to aim and take the shot!">
+                                    <div class="bb-file-card">
+                                        <div class="bb-file-corner"></div>
+                                        <div class="bb-file-icon">✊</div>
+                                        <div class="bb-file-pdf-tag">PDF</div>
+                                    </div>
+                                </div>
+
+                                <!-- Confetti canvas -->
+                                <canvas class="bb-confetti-canvas" id="bbConfettiCanvas"></canvas>
+                            </div>
+
+                            <!-- Selected File Information Card -->
+                            <div class="bb-loaded-card" id="bbLoadedCard" style="display:none;">
+                                <div class="bb-loaded-left">
+                                    <div class="bb-pdf-badge-icon">📄</div>
+                                    <div style="min-width:0;">
+                                        <div class="bb-loaded-name" id="bbLoadedName">filename.pdf</div>
+                                        <div class="bb-loaded-meta" id="bbLoadedMeta">0 KB</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:0.35rem; align-items:center;">
+                                    <button type="button" class="btn btn-sm btn-outline" onclick="shootAgain()" style="font-size:0.75rem;">🏀 Shoot</button>
+                                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('fileInput').click()" style="font-size:0.75rem;">Change</button>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Fallback elements kept for compatibility -->
+                        <div id="uploadZone" style="display:none;"></div>
+                        <div id="fileName" style="display:none;"></div>
+                        <div id="pageBadge" style="display:none;"></div>
                         <input type="file" id="fileInput" accept=".pdf" hidden>
                     </div>
 
@@ -1179,6 +1491,7 @@
             tabUpload.classList.add('active');
             methodUrlBlock.style.display = 'none';
             methodUploadBlock.style.display = 'block';
+            setTimeout(initBasketballGame, 60);
         }
     }
 
@@ -1240,55 +1553,324 @@
         }
     }
 
-    // Direct File Upload handling
-    fileInput.addEventListener('change', async (e) => {
-        if (e.target.files.length > 0) {
-            selectedFile = e.target.files[0];
-            fileName.textContent = selectedFile.name + ` (${formatSize(selectedFile.size)})`;
-            pageBadge.innerHTML = '<span class="status status-warning">⏳ Inspecting pages...</span>';
-            uploadZone.classList.add('has-file');
+    // Basketball Game & Upload Elements
+    const bbCourt = document.getElementById('bbCourt');
+    const bbArena = document.getElementById('bbArena');
+    const bbDropZone = document.getElementById('bbDropZone');
+    const bbTrajectorySvg = document.getElementById('bbTrajectorySvg');
+    const bbNet = document.getElementById('bbNet');
+    const bbFileBall = document.getElementById('bbFileBall');
+    const bbScoreCount = document.getElementById('bbScoreCount');
+    const bbConfettiCanvas = document.getElementById('bbConfettiCanvas');
+    const bbLoadedCard = document.getElementById('bbLoadedCard');
+    const bbLoadedName = document.getElementById('bbLoadedName');
+    const bbLoadedMeta = document.getElementById('bbLoadedMeta');
 
-            const formData = new FormData();
-            formData.append('file', selectedFile);
+    let bbScore = 0;
+    let isBbDragging = false;
+    let bbBallOrigin = { x: 24, y: 194 };
+    let bbHoopTarget = { x: 215, y: 145 };
+    let bbParticles = [];
+    let bbGameInitialized = false;
 
-            try {
-                const res = await fetch('/api/inspect', { method: 'POST', body: formData });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || 'Inspect failed');
-
-                totalPdfPages = data.total_pages;
-                currentActName = selectedFile.name.replace(/\.pdf$/i, '');
-
-                if (data.exceeds_threshold) {
-                    pageBadge.innerHTML = `<span class="status status-warning">⚠️ ${totalPdfPages} pages</span>`;
-                    detectedPageCount.textContent = totalPdfPages;
-                    startPageInput.value = 1;
-                    endPageInput.value = Math.min(15, totalPdfPages);
-                    endPageInput.max = totalPdfPages;
-                    limiterBox.classList.add('active');
-                    generalSectionGroup.style.display = 'none';
-                    selectMode('page_range');
-                } else {
-                    pageBadge.innerHTML = `<span class="status status-success">✓ ${totalPdfPages} pages</span>`;
-                    limiterBox.classList.remove('active');
-                    generalSectionGroup.style.display = 'block';
-                    currentMode = 'full';
-                }
-            } catch (err) {
-                pageBadge.innerHTML = `<span class="status status-error">Error checking pages</span>`;
+    // Web Audio Synthesized Swish Sound (zero external assets)
+    function playSwishSound() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const audioCtx = new AudioCtx();
+            const duration = 0.22;
+            const bufferSize = Math.floor(audioCtx.sampleRate * duration);
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = Math.random() * 2 - 1;
             }
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1800, audioCtx.currentTime);
+            filter.Q.setValueAtTime(2.8, audioCtx.currentTime);
+
+            const gain = audioCtx.createGain();
+            gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.005, audioCtx.currentTime + duration);
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+            noise.start();
+        } catch(e) {}
+    }
+
+    // Confetti particles for swish celebration
+    function burstBbConfetti(x, y) {
+        if (!bbConfettiCanvas) return;
+        const colors = ['#ea580c', '#f97316', '#ef4444', '#fbbf24', '#38bdf8', '#22c55e'];
+        for (let i = 0; i < 40; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 6.5 + 2;
+            bbParticles.push({
+                x, y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 2.5,
+                size: Math.random() * 5 + 3,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                life: 1,
+                decay: Math.random() * 0.035 + 0.02
+            });
         }
+        requestAnimationFrame(renderBbConfetti);
+    }
+
+    function renderBbConfetti() {
+        if (!bbConfettiCanvas) return;
+        const ctx = bbConfettiCanvas.getContext('2d');
+        ctx.clearRect(0, 0, bbConfettiCanvas.width, bbConfettiCanvas.height);
+        bbParticles = bbParticles.filter(p => p.life > 0);
+        bbParticles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.22; // gravity
+            p.life -= p.decay;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.life);
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+        });
+        ctx.globalAlpha = 1;
+        if (bbParticles.length > 0) {
+            requestAnimationFrame(renderBbConfetti);
+        }
+    }
+
+    // Trajectory curved dotted line
+    function drawBbTrajectory(fromX, fromY, toX, toY) {
+        if (!bbTrajectorySvg) return;
+        bbTrajectorySvg.innerHTML = '';
+        const controlX = (fromX + toX) / 2 - 25;
+        const controlY = Math.min(fromX, toX) < toX ? fromY - 110 : toY - 110;
+
+        for (let t = 0.1; t <= 0.95; t += 0.075) {
+            const qx = (1 - t) * (1 - t) * fromX + 2 * (1 - t) * t * controlX + t * t * toX;
+            const qy = (1 - t) * (1 - t) * fromY + 2 * (1 - t) * t * controlY + t * t * toY;
+
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', qx);
+            circle.setAttribute('cy', qy);
+            circle.setAttribute('r', 3.2);
+            circle.setAttribute('fill', '#ea580c');
+            circle.setAttribute('opacity', 0.85);
+            bbTrajectorySvg.appendChild(circle);
+        }
+    }
+
+    // Shoot the ball into the hoop
+    function shootBall(releaseX, releaseY, onScored) {
+        if (!bbFileBall) return;
+        let progress = 0;
+        const startX = releaseX !== undefined ? releaseX : bbBallOrigin.x + 29;
+        const startY = releaseY !== undefined ? releaseY : bbBallOrigin.y + 36;
+        const targetX = bbHoopTarget.x;
+        const targetY = bbHoopTarget.y;
+        const controlX = (startX + targetX) / 2 - 20;
+        const controlY = Math.min(startY, targetY) - 95;
+
+        if (bbTrajectorySvg) bbTrajectorySvg.innerHTML = '';
+
+        function anim() {
+            progress += 0.04;
+            if (progress >= 1) {
+                // Reached basket rim!
+                bbFileBall.style.left = `${targetX - 29}px`;
+                bbFileBall.style.top = `${targetY - 20}px`;
+                bbFileBall.style.transform = `scale(0.55)`;
+
+                // Swish!
+                playSwishSound();
+                if (bbNet) {
+                    bbNet.classList.remove('swish');
+                    void bbNet.offsetWidth; // trigger reflow
+                    bbNet.classList.add('swish');
+                }
+                burstBbConfetti(targetX, targetY);
+
+                bbScore++;
+                if (bbScoreCount) bbScoreCount.textContent = bbScore;
+
+                if (onScored) onScored();
+                else if (!selectedFile) {
+                    setTimeout(() => { fileInput.click(); }, 200);
+                }
+
+                // Reset back to starting spot smoothly
+                setTimeout(() => {
+                    bbFileBall.style.transition = 'all 0.35s ease-out';
+                    bbFileBall.style.left = `${bbBallOrigin.x}px`;
+                    bbFileBall.style.top = `${bbBallOrigin.y}px`;
+                    bbFileBall.style.transform = 'scale(1) rotate(0deg)';
+                    setTimeout(() => {
+                        bbFileBall.style.transition = 'none';
+                        drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
+                    }, 350);
+                }, 450);
+                return;
+            }
+
+            const t = progress;
+            const curX = (1 - t) * (1 - t) * startX + 2 * (1 - t) * t * controlX + t * t * targetX;
+            const curY = (1 - t) * (1 - t) * startY + 2 * (1 - t) * t * controlY + t * t * targetY;
+            const rot = progress * 360;
+            const scale = 1 - progress * 0.45;
+
+            bbFileBall.style.left = `${curX - 29}px`;
+            bbFileBall.style.top = `${curY - 36}px`;
+            bbFileBall.style.transform = `scale(${scale}) rotate(${rot}deg)`;
+
+            requestAnimationFrame(anim);
+        }
+        requestAnimationFrame(anim);
+    }
+
+    function shootAgain() {
+        shootBall();
+    }
+
+    // Initialize Basketball Game dimensions & events
+    function initBasketballGame() {
+        if (!bbArena) return;
+        const width = bbArena.offsetWidth || 400;
+        const height = bbArena.offsetHeight || 290;
+
+        if (bbConfettiCanvas) {
+            bbConfettiCanvas.width = width;
+            bbConfettiCanvas.height = height;
+        }
+
+        bbHoopTarget = { x: width / 2, y: 142 };
+        bbBallOrigin = { x: 24, y: height - 92 };
+
+        if (bbFileBall) {
+            bbFileBall.style.left = `${bbBallOrigin.x}px`;
+            bbFileBall.style.top = `${bbBallOrigin.y}px`;
+            bbFileBall.style.transform = 'scale(1) rotate(0deg)';
+        }
+
+        drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
+
+        if (!bbGameInitialized && bbFileBall) {
+            bbGameInitialized = true;
+
+            bbFileBall.addEventListener('pointerdown', (e) => {
+                isBbDragging = true;
+                bbFileBall.setPointerCapture(e.pointerId);
+                bbFileBall.classList.add('grabbing');
+                const rect = bbArena.getBoundingClientRect();
+                const curX = e.clientX - rect.left;
+                const curY = e.clientY - rect.top;
+                drawBbTrajectory(curX, curY, bbHoopTarget.x, bbHoopTarget.y);
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!isBbDragging) return;
+                const rect = bbArena.getBoundingClientRect();
+                const curX = Math.max(10, Math.min(rect.width - 40, e.clientX - rect.left));
+                const curY = Math.max(10, Math.min(rect.height - 40, e.clientY - rect.top));
+                bbFileBall.style.left = `${curX - 29}px`;
+                bbFileBall.style.top = `${curY - 36}px`;
+                drawBbTrajectory(curX, curY, bbHoopTarget.x, bbHoopTarget.y);
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                if (!isBbDragging) return;
+                isBbDragging = false;
+                bbFileBall.classList.remove('grabbing');
+                const rect = bbArena.getBoundingClientRect();
+                const releaseX = e.clientX - rect.left;
+                const releaseY = e.clientY - rect.top;
+                shootBall(releaseX, releaseY);
+            });
+
+            // Drag and drop real PDF files on the arena
+            bbArena.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                bbDropZone.classList.add('dragover');
+            });
+            bbArena.addEventListener('dragleave', (e) => {
+                if (!bbArena.contains(e.relatedTarget)) {
+                    bbDropZone.classList.remove('dragover');
+                }
+            });
+            bbArena.addEventListener('drop', (e) => {
+                e.preventDefault();
+                bbDropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].name.toLowerCase().endsWith('.pdf')) {
+                    shootBall(undefined, undefined, () => {
+                        handleSelectedFile(e.dataTransfer.files[0]);
+                    });
+                }
+            });
+        }
+    }
+
+    window.addEventListener('resize', () => {
+        if (currentInputMethod === 'upload') initBasketballGame();
     });
 
-    // Drag and Drop
-    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
-    uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('dragover'); });
-    uploadZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].name.toLowerCase().endsWith('.pdf')) {
-            fileInput.files = e.dataTransfer.files;
-            fileInput.dispatchEvent(new Event('change'));
+    // Process selected PDF file
+    async function handleSelectedFile(file) {
+        if (!file) return;
+        selectedFile = file;
+
+        if (bbLoadedCard) {
+            bbLoadedCard.style.display = 'flex';
+            bbLoadedName.textContent = file.name;
+            bbLoadedMeta.textContent = `${formatSize(file.size)} · ⏳ Inspecting pages...`;
+        }
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const res = await fetch('/api/inspect', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Inspect failed');
+
+            totalPdfPages = data.total_pages;
+            currentActName = selectedFile.name.replace(/\.pdf$/i, '');
+
+            if (data.exceeds_threshold) {
+                if (bbLoadedMeta) {
+                    bbLoadedMeta.innerHTML = `<span style="color:#b45309; font-weight:700;">⚠️ ${totalPdfPages} pages (>15)</span> · ${formatSize(file.size)}`;
+                }
+                detectedPageCount.textContent = totalPdfPages;
+                startPageInput.value = 1;
+                endPageInput.value = Math.min(15, totalPdfPages);
+                endPageInput.max = totalPdfPages;
+                limiterBox.classList.add('active');
+                generalSectionGroup.style.display = 'none';
+                selectMode('page_range');
+                showToast(`⚠️ PDF has ${totalPdfPages} pages (>15). Range options enabled.`);
+            } else {
+                if (bbLoadedMeta) {
+                    bbLoadedMeta.innerHTML = `<span style="color:var(--success); font-weight:700;">✓ ${totalPdfPages} pages</span> · ${formatSize(file.size)}`;
+                }
+                limiterBox.classList.remove('active');
+                generalSectionGroup.style.display = 'block';
+                currentMode = 'full';
+                showToast(`✓ PDF loaded (${totalPdfPages} pages)`);
+            }
+        } catch (err) {
+            if (bbLoadedMeta) {
+                bbLoadedMeta.innerHTML = `<span style="color:var(--danger);">Error inspecting PDF</span>`;
+            }
+            showToast(`❌ ${err.message}`);
+        }
+    }
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleSelectedFile(e.target.files[0]);
         }
     });
 
