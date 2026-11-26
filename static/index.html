@@ -313,6 +313,119 @@
             font-weight: 700;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
+        .bb-points-pill {
+            background: #fef3c7;
+            color: #b45309;
+            border: 1.5px solid #fde68a;
+            font-weight: 800;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.65rem;
+            border-radius: 9999px;
+            box-shadow: 0 1px 2px rgba(245, 158, 11, 0.15);
+        }
+        .bb-ppo-bar-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.45rem 0.65rem;
+            margin-bottom: 0.65rem;
+        }
+        .bb-ppo-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.73rem;
+            color: #475569;
+            margin-bottom: 0.25rem;
+        }
+        .bb-ppo-track {
+            height: 7px;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bb-ppo-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #10b981 60%, #f59e0b 100%);
+            border-radius: 9999px;
+            transition: width 0.4s ease-out;
+        }
+        .bb-float-pts {
+            position: absolute;
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #f59e0b;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.25);
+            pointer-events: none;
+            animation: floatUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            z-index: 50;
+        }
+        @keyframes floatUp {
+            0% { opacity: 0; transform: translateY(0) scale(0.7); }
+            30% { opacity: 1; transform: translateY(-16px) scale(1.15); }
+            100% { opacity: 0; transform: translateY(-48px) scale(1); }
+        }
+        .ppo-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 3000;
+            padding: 1.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+        .ppo-modal.active { display: flex; }
+        .ppo-card {
+            background: linear-gradient(145deg, #ffffff 0%, #fffbf0 100%);
+            border: 3px solid #f59e0b;
+            border-radius: 16px;
+            padding: 2rem 1.75rem;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(245, 158, 11, 0.35);
+            animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .ppo-seal {
+            display: inline-block;
+            background: #f59e0b;
+            color: #78350f;
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            padding: 0.25rem 0.8rem;
+            border-radius: 9999px;
+            margin-bottom: 0.75rem;
+        }
+        .ppo-card h2 {
+            font-size: 1.35rem;
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+        }
+        .ppo-card p {
+            font-size: 0.85rem;
+            color: #64748b;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        .ppo-details {
+            background: white;
+            border: 1.5px solid #fed7aa;
+            border-radius: 10px;
+            padding: 0.85rem 1rem;
+            text-align: left;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
         .bb-level-bar {
             display: flex;
             background: #e2e8f0;
@@ -1120,23 +1233,39 @@
                             <div class="bb-header">
                                 <div>
                                     <div class="bb-title">Upload files</div>
-                                    <div class="bb-subtitle" id="bbDifficultyDesc">👶 Noob: Basket in center</div>
+                                    <div class="bb-subtitle" id="bbDifficultyDesc">👶 Noob: Easy buckets, center hoop</div>
                                 </div>
-                                <div class="bb-score-pill" title="Total successful shots">
-                                    Uploaded <span id="bbScoreCount">0</span>
+                                <div style="display:flex; align-items:center; gap:0.4rem;">
+                                    <div class="bb-points-pill" title="Earn 1000 points to unlock PPO Offer!">
+                                        ⭐ <span id="bbPointsCount">0</span> pts
+                                    </div>
+                                    <div class="bb-score-pill" title="Total successful shots">
+                                        Uploaded <span id="bbScoreCount">0</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- PPO Offer Progress Meter (Goal: 1000 Pts) -->
+                            <div class="bb-ppo-bar-container" title="Reach 1000 points for PPO Offer!">
+                                <div class="bb-ppo-header">
+                                    <span>💼 <strong>PPO Offer Progress:</strong> <span id="bbPpoPercent">0%</span></span>
+                                    <span><span id="bbPpoPointsText">0</span> / 1000 pts</span>
+                                </div>
+                                <div class="bb-ppo-track">
+                                    <div class="bb-ppo-fill" id="bbPpoFill" style="width: 0%;"></div>
                                 </div>
                             </div>
 
                             <!-- 3 Difficulty Levels: Noob, Average, Pro -->
                             <div class="bb-level-bar">
                                 <button type="button" class="bb-level-btn active" id="btnLevelNoob" onclick="setBbDifficulty('noob')">
-                                    👶 Noob
+                                    👶 Noob (+1 pt)
                                 </button>
                                 <button type="button" class="bb-level-btn" id="btnLevelAverage" onclick="setBbDifficulty('average')">
-                                    🎯 Average (Far)
+                                    🎯 Hard (+10 pts)
                                 </button>
                                 <button type="button" class="bb-level-btn" id="btnLevelPro" onclick="setBbDifficulty('pro')">
-                                    🔥 Pro (Moving Target)
+                                    🔥 Pro Impossible (+100 pts)
                                 </button>
                             </div>
 
@@ -1454,6 +1583,24 @@
     </div>
 </div>
 
+<!-- PPO Offer Celebration Modal (Unlocked at 1000 Pts) -->
+<div class="ppo-modal" id="ppoModal" onclick="closePpoModal()">
+    <div class="ppo-card" onclick="event.stopPropagation()">
+        <div class="ppo-seal">📜 OFFICIAL PPO OFFER LETTER 📜</div>
+        <h2>🎉 BADHAI HO! PPO OFFER UNLOCKED! 🎉</h2>
+        <p>Aapne Basketball me <strong>1,000 Points</strong> score karke prove kar diya hai ki aapka aim AI se bhi tez hai!</p>
+        <div class="ppo-details">
+            <div>💼 <strong>Role:</strong> Chief Basketball &amp; Clause Officer (CBCO)</div>
+            <div>💰 <strong>Package:</strong> ₹50,00,000 PA (5000 stipend se sidha PPO!)</div>
+            <div>🎁 <strong>Perks:</strong> Unlimited Free Gemini API Keys &amp; Zero Downtime</div>
+            <div>📍 <strong>Location:</strong> Remote / On Court</div>
+        </div>
+        <button class="btn btn-primary" onclick="closePpoModal()" style="margin-top:0.5rem; font-size:0.95rem;">
+            🍾 Offer Accept Karo &amp; Party Do!
+        </button>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- ========================================================================= -->
@@ -1638,8 +1785,15 @@
     const bbLoadedMeta = document.getElementById('bbLoadedMeta');
     const bbDifficultyDesc = document.getElementById('bbDifficultyDesc');
     const bbMissBadge = document.getElementById('bbMissBadge');
+    const bbPointsCount = document.getElementById('bbPointsCount');
+    const bbPpoPercent = document.getElementById('bbPpoPercent');
+    const bbPpoPointsText = document.getElementById('bbPpoPointsText');
+    const bbPpoFill = document.getElementById('bbPpoFill');
+    const ppoModal = document.getElementById('ppoModal');
 
     let bbScore = 0;
+    let bbPoints = parseInt(localStorage.getItem('bb_ppo_points') || '0', 10);
+    let ppoUnlocked = localStorage.getItem('bb_ppo_unlocked') === 'true';
     let isBbDragging = false;
     let currentBbDifficulty = 'noob'; // 'noob', 'average', 'pro'
     let bbBallOrigin = { x: 24, y: 194 };
@@ -1648,11 +1802,58 @@
     let bbHoopCurrentY = 142;
     let bbHoopPhase = 0;
     let bbHoopSpeed = 0.032;
-    let bbProAnimId = null;
+    let bbHoopAnimId = null;
     let bbParticles = [];
     let bbGameInitialized = false;
 
-    // Difficulty Settings: Noob, Average, Pro
+    // Update PPO offer points and progress bar
+    function updatePpoDisplay() {
+        if (bbPointsCount) bbPointsCount.textContent = bbPoints;
+        if (bbPpoPointsText) bbPpoPointsText.textContent = Math.min(1000, bbPoints);
+        const pct = Math.min(100, (bbPoints / 1000) * 100);
+        if (bbPpoPercent) bbPpoPercent.textContent = `${Math.floor(pct)}%`;
+        if (bbPpoFill) bbPpoFill.style.width = `${pct}%`;
+    }
+
+    // Spawn floating score badge on success (+pts / hike)
+    function spawnFloatingPoints(pts, x, y) {
+        if (!bbArena) return;
+        const el = document.createElement('div');
+        el.className = 'bb-float-pts';
+        el.textContent = `+${pts} pts! (+${pts * 10}% Hike!)`;
+        el.style.left = `${Math.max(20, Math.min(bbArena.offsetWidth - 150, x - 50))}px`;
+        el.style.top = `${Math.max(20, y - 40)}px`;
+        bbArena.appendChild(el);
+        setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 1300);
+    }
+
+    // Add points, persist, check PPO threshold
+    function addPoints(pts, x, y) {
+        bbPoints += pts;
+        localStorage.setItem('bb_ppo_points', bbPoints);
+        updatePpoDisplay();
+        spawnFloatingPoints(pts, x, y);
+
+        if (bbPoints >= 1000 && !ppoUnlocked) {
+            ppoUnlocked = true;
+            localStorage.setItem('bb_ppo_unlocked', 'true');
+            setTimeout(() => {
+                openPpoModal();
+            }, 600);
+        }
+    }
+
+    function openPpoModal() {
+        if (ppoModal) ppoModal.classList.add('active');
+        playPpoFanfare();
+        burstBbConfetti(window.innerWidth / 2, window.innerHeight / 2);
+    }
+
+    function closePpoModal() {
+        if (ppoModal) ppoModal.classList.remove('active');
+    }
+
+    // Difficulty Settings: Noob, Average (Hard), Pro (Impossible)
     function setBbDifficulty(level) {
         currentBbDifficulty = level;
 
@@ -1666,49 +1867,48 @@
 
         const width = bbArena ? (bbArena.offsetWidth || 400) : 400;
 
+        stopHoopLoop();
+
         if (level === 'noob') {
-            stopProHoopLoop();
-            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "👶 Noob: Easy buckets, basket in the center";
+            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "👶 Noob: Easy buckets, center stationary hoop (+1 pt / +10% Hike)";
             bbHoopCurrentX = width / 2;
             bbHoopCurrentY = 142;
             bbHoopTarget = { x: bbHoopCurrentX, y: bbHoopCurrentY };
 
             if (bbHoop) {
                 bbHoop.style.transition = 'all 0.4s ease';
-                bbHoop.style.left = '50%';
+                bbHoop.style.left = `${bbHoopCurrentX}px`;
                 bbHoop.style.top = '96px';
                 bbHoop.style.transform = 'translateX(-50%) scale(1.0)';
             }
             if (bbDropZone) {
                 bbDropZone.style.transition = 'all 0.4s ease';
-                bbDropZone.style.left = '50%';
+                bbDropZone.style.left = `${bbHoopCurrentX}px`;
                 bbDropZone.style.top = '16px';
                 bbDropZone.style.transform = 'translateX(-50%) scale(1.0)';
             }
         } else if (level === 'average') {
-            stopProHoopLoop();
-            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "🎯 Average: Basket is placed farther away in the corner";
-            bbHoopCurrentX = width * 0.82;
-            bbHoopCurrentY = 82;
-            bbHoopTarget = { x: bbHoopCurrentX, y: bbHoopCurrentY };
-
-            if (bbHoop) {
-                bbHoop.style.transition = 'all 0.4s ease';
-                bbHoop.style.left = '82%';
-                bbHoop.style.top = '36px';
-                bbHoop.style.transform = 'translateX(-50%) scale(0.78)';
-            }
-            if (bbDropZone) {
-                bbDropZone.style.transition = 'all 0.4s ease';
-                bbDropZone.style.left = '82%';
-                bbDropZone.style.top = '6px';
-                bbDropZone.style.transform = 'translateX(-50%) scale(0.78)';
-            }
-        } else if (level === 'pro') {
-            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "🔥 Pro: Basket moves when you aim! Timing & luck required!";
+            // HARD MODE: Basket moves/sways in far corner, strict timing
+            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "🎯 Hard: Moving corner basket! Strict timing required (+10 pts / +100% Hike)";
+            bbHoopSpeed = 0.042;
             if (bbHoop) {
                 bbHoop.style.transition = 'none';
-                bbHoop.style.top = '90px';
+                bbHoop.style.top = '48px';
+                bbHoop.style.transform = 'translateX(-50%) scale(0.82)';
+            }
+            if (bbDropZone) {
+                bbDropZone.style.transition = 'none';
+                bbDropZone.style.top = '10px';
+                bbDropZone.style.transform = 'translateX(-50%) scale(0.82)';
+            }
+            startHoopLoop('average');
+        } else if (level === 'pro') {
+            // IMPOSSIBLE PRO MODE: Active AI evasion that dodges incoming ball
+            if (bbDifficultyDesc) bbDifficultyDesc.textContent = "🔥 Pro Impossible: Active AI Evasion! Basket dodges your shots! (+100 pts)";
+            bbHoopSpeed = 0.055;
+            if (bbHoop) {
+                bbHoop.style.transition = 'none';
+                bbHoop.style.top = '88px';
                 bbHoop.style.transform = 'translateX(-50%) scale(0.88)';
             }
             if (bbDropZone) {
@@ -1716,49 +1916,55 @@
                 bbDropZone.style.top = '12px';
                 bbDropZone.style.transform = 'translateX(-50%) scale(0.88)';
             }
-            startProHoopLoop();
+            startHoopLoop('pro');
         }
 
         drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
     }
 
-    function startProHoopLoop() {
-        stopProHoopLoop();
+    function startHoopLoop(mode) {
+        stopHoopLoop();
         function loop() {
-            if (currentBbDifficulty !== 'pro') return;
+            if (currentBbDifficulty === 'noob') return;
             const width = bbArena ? (bbArena.offsetWidth || 400) : 400;
             bbHoopPhase += bbHoopSpeed;
 
-            const minX = 70;
-            const maxX = width - 70;
-            bbHoopCurrentX = (minX + maxX) / 2 + Math.sin(bbHoopPhase) * ((maxX - minX) / 2);
-            bbHoopCurrentY = 138;
+            if (mode === 'average') {
+                // Hard mode: swings back and forth in far right zone (55% to 88% width)
+                const minX = width * 0.52;
+                const maxX = width * 0.88;
+                bbHoopCurrentX = (minX + maxX) / 2 + Math.sin(bbHoopPhase) * ((maxX - minX) / 2);
+                bbHoopCurrentY = 100 + Math.cos(bbHoopPhase * 1.5) * 12;
+            } else if (mode === 'pro') {
+                // Pro mode: traverses wider court (20% to 85% width)
+                const minX = width * 0.20;
+                const maxX = width * 0.85;
+                bbHoopCurrentX = (minX + maxX) / 2 + Math.sin(bbHoopPhase) * ((maxX - minX) / 2);
+                bbHoopCurrentY = 135;
+            }
+
             bbHoopTarget = { x: bbHoopCurrentX, y: bbHoopCurrentY };
 
-            if (bbHoop) {
-                bbHoop.style.left = `${bbHoopCurrentX}px`;
-            }
-            if (bbDropZone) {
-                bbDropZone.style.left = `${bbHoopCurrentX}px`;
-            }
+            if (bbHoop) bbHoop.style.left = `${bbHoopCurrentX}px`;
+            if (bbDropZone) bbDropZone.style.left = `${bbHoopCurrentX}px`;
 
             if (!isBbDragging) {
                 drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopCurrentX, bbHoopCurrentY);
             }
 
-            bbProAnimId = requestAnimationFrame(loop);
+            bbHoopAnimId = requestAnimationFrame(loop);
         }
-        bbProAnimId = requestAnimationFrame(loop);
+        bbHoopAnimId = requestAnimationFrame(loop);
     }
 
-    function stopProHoopLoop() {
-        if (bbProAnimId) {
-            cancelAnimationFrame(bbProAnimId);
-            bbProAnimId = null;
+    function stopHoopLoop() {
+        if (bbHoopAnimId) {
+            cancelAnimationFrame(bbHoopAnimId);
+            bbHoopAnimId = null;
         }
     }
 
-    // Web Audio Synthesized Swish Sound (zero external assets)
+    // Web Audio Synthesized Swish Sound
     function playSwishSound() {
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1809,18 +2015,47 @@
         } catch(e) {}
     }
 
-    // Confetti particles for swish celebration
+    // Web Audio Synthesized PPO Fanfare Celebration Chords
+    function playPpoFanfare() {
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const notes = [
+                { f: 523.25, t: 0.0, d: 0.16 }, // C5
+                { f: 659.25, t: 0.16, d: 0.16 }, // E5
+                { f: 783.99, t: 0.32, d: 0.22 }, // G5
+                { f: 1046.50, t: 0.52, d: 0.80 }, // C6 (climax)
+                { f: 880.00, t: 0.52, d: 0.80 },  // A5
+                { f: 659.25, t: 0.52, d: 0.80 }   // E5
+            ];
+            notes.forEach(n => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(n.f, ctx.currentTime + n.t);
+                gain.gain.setValueAtTime(0.35, ctx.currentTime + n.t);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + n.t + n.d);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(ctx.currentTime + n.t);
+                osc.stop(ctx.currentTime + n.t + n.d + 0.05);
+            });
+        } catch(e) {}
+    }
+
+    // Confetti particles for swish & PPO celebration
     function burstBbConfetti(x, y) {
         if (!bbConfettiCanvas) return;
-        const colors = ['#ea580c', '#f97316', '#ef4444', '#fbbf24', '#38bdf8', '#22c55e'];
-        for (let i = 0; i < 42; i++) {
+        const colors = ['#ea580c', '#f97316', '#ef4444', '#fbbf24', '#38bdf8', '#22c55e', '#a855f7'];
+        for (let i = 0; i < 50; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 6.5 + 2.5;
+            const speed = Math.random() * 7.5 + 2.5;
             bbParticles.push({
                 x, y,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 2.8,
-                size: Math.random() * 5 + 3,
+                vy: Math.sin(angle) * speed - 3.2,
+                size: Math.random() * 6 + 3,
                 color: colors[Math.floor(Math.random() * colors.length)],
                 life: 1,
                 decay: Math.random() * 0.035 + 0.02
@@ -1870,66 +2105,113 @@
         }
     }
 
-    // Shoot the ball into the hoop
+    // Shoot the ball with physics & AI evasion
     function shootBall(releaseX, releaseY, onScored) {
         if (!bbFileBall) return;
         let progress = 0;
         const startX = releaseX !== undefined ? releaseX : bbBallOrigin.x + 29;
         const startY = releaseY !== undefined ? releaseY : bbBallOrigin.y + 36;
 
-        // In Pro mode: target is snapshot of where hoop was aimed
-        const targetX = bbHoopTarget.x;
-        const targetY = bbHoopTarget.y;
+        // Snapshot of target position at launch
+        const targetX = bbHoopCurrentX;
+        const targetY = bbHoopCurrentY;
         const controlX = (startX + targetX) / 2 - 20;
         const controlY = Math.min(startY, targetY) - 95;
 
         if (bbTrajectorySvg) bbTrajectorySvg.innerHTML = '';
 
         function anim() {
-            progress += 0.04;
+            progress += 0.038;
+
+            // PRO MODE: ACTIVE AI EVASION MID-FLIGHT
+            if (currentBbDifficulty === 'pro' && progress >= 0.35 && progress <= 0.88) {
+                // Basket actively senses ball incoming and dashes away!
+                const width = bbArena ? (bbArena.offsetWidth || 400) : 400;
+                const minX = width * 0.15;
+                const maxX = width * 0.85;
+
+                // Push hoop away from ball's trajectory targetX
+                if (Math.abs(bbHoopCurrentX - targetX) < 110) {
+                    if (targetX < bbHoopCurrentX && bbHoopCurrentX < maxX) {
+                        bbHoopCurrentX += 5.2; // dodge right
+                    } else if (targetX >= bbHoopCurrentX && bbHoopCurrentX > minX) {
+                        bbHoopCurrentX -= 5.2; // dodge left
+                    }
+                    if (bbHoop) bbHoop.style.left = `${bbHoopCurrentX}px`;
+                    if (bbDropZone) bbDropZone.style.left = `${bbHoopCurrentX}px`;
+                }
+            }
+
             if (progress >= 1) {
-                // Check Hit or Miss based on level
-                let isHit = true;
-                if (currentBbDifficulty === 'pro') {
-                    // Check if the moving hoop is near the ball's final X
-                    const diff = Math.abs(targetX - bbHoopCurrentX);
-                    isHit = diff <= 44;
+                // Precision hit detection per difficulty
+                let isHit = false;
+                const finalHoopX = bbHoopCurrentX;
+                const finalHoopY = bbHoopCurrentY;
+                const diff = Math.abs(targetX - finalHoopX);
+
+                if (currentBbDifficulty === 'noob') {
+                    // Generous hit tolerance in Noob mode
+                    isHit = diff <= 55;
+                } else if (currentBbDifficulty === 'average') {
+                    // Hard Mode: strict timing window (must catch moving hoop <= 22px)
+                    isHit = diff <= 22;
+                } else if (currentBbDifficulty === 'pro') {
+                    // Pro Mode: nearly impossible tolerance (<= 12px while AI actively dodged)
+                    isHit = diff <= 12;
                 }
 
                 if (isHit) {
-                    // Reached basket rim!
-                    bbFileBall.style.left = `${(currentBbDifficulty === 'pro' ? bbHoopCurrentX : targetX) - 29}px`;
-                    bbFileBall.style.top = `${targetY - 20}px`;
+                    // SWISH!
+                    bbFileBall.style.left = `${finalHoopX - 29}px`;
+                    bbFileBall.style.top = `${finalHoopY - 18}px`;
                     bbFileBall.style.transform = `scale(0.55)`;
 
-                    // Swish!
                     playSwishSound();
                     if (bbNet) {
                         bbNet.classList.remove('swish');
                         void bbNet.offsetWidth; // trigger reflow
                         bbNet.classList.add('swish');
                     }
-                    burstBbConfetti(currentBbDifficulty === 'pro' ? bbHoopCurrentX : targetX, targetY);
+                    burstBbConfetti(finalHoopX, finalHoopY);
+
+                    // Points allocation: Noob (+1), Hard (+10), Pro (+100)
+                    const earnedPts = currentBbDifficulty === 'pro' ? 100 : (currentBbDifficulty === 'average' ? 10 : 1);
+                    addPoints(earnedPts, finalHoopX, finalHoopY);
 
                     bbScore++;
                     if (bbScoreCount) bbScoreCount.textContent = bbScore;
 
                     if (onScored) onScored();
                     else if (!selectedFile) {
-                        setTimeout(() => { fileInput.click(); }, 200);
+                        setTimeout(() => { fileInput.click(); }, 250);
                     }
                 } else {
-                    // Miss / Brick!
+                    // BRICK / MISS / EVADED!
                     playClankSound();
+
                     if (bbMissBadge) {
-                        bbMissBadge.textContent = "🧱 BRICK! Time it better!";
+                        if (currentBbDifficulty === 'pro') {
+                            const proMisses = [
+                                "💨 EVADED! AI ne dodge kar diya!",
+                                "🧱 AUKAT ME RAHO! 5000 stipend hai!",
+                                "🤖 AI: 'Nice try, noob!' (Dodged)",
+                                "⚡ Too slow! Basket ne jump maar diya!"
+                            ];
+                            bbMissBadge.textContent = proMisses[Math.floor(Math.random() * proMisses.length)];
+                        } else if (currentBbDifficulty === 'average') {
+                            bbMissBadge.textContent = `🧱 CLANK! Missed by ${Math.round(diff)}px! Time the moving hoop!`;
+                        } else {
+                            bbMissBadge.textContent = "🧱 BRICK! Aim closer to the center!";
+                        }
                         bbMissBadge.classList.add('show');
-                        setTimeout(() => { bbMissBadge.classList.remove('show'); }, 1200);
+                        setTimeout(() => { bbMissBadge.classList.remove('show'); }, 1400);
                     }
-                    // Bounce off
-                    bbFileBall.style.left = `${targetX + 35}px`;
+
+                    // Bounce off rim violently
+                    const bounceDir = targetX < finalHoopX ? -1 : 1;
+                    bbFileBall.style.left = `${targetX + bounceDir * 42}px`;
                     bbFileBall.style.top = `${targetY + 45}px`;
-                    bbFileBall.style.transform = 'scale(0.7) rotate(90deg)';
+                    bbFileBall.style.transform = `scale(0.72) rotate(${bounceDir * 90}deg)`;
                 }
 
                 // Reset back to starting spot smoothly
@@ -1942,7 +2224,7 @@
                         bbFileBall.style.transition = 'none';
                         drawBbTrajectory(bbBallOrigin.x + 29, bbBallOrigin.y + 36, bbHoopTarget.x, bbHoopTarget.y);
                     }, 350);
-                }, isHit ? 450 : 600);
+                }, isHit ? 450 : 650);
                 return;
             }
 
@@ -1984,6 +2266,7 @@
             bbFileBall.style.transform = 'scale(1) rotate(0deg)';
         }
 
+        updatePpoDisplay();
         setBbDifficulty(currentBbDifficulty);
 
         if (!bbGameInitialized && bbFileBall) {
@@ -1997,10 +2280,10 @@
                 const curX = e.clientX - rect.left;
                 const curY = e.clientY - rect.top;
 
-                // In Pro mode: basket accelerates when user tries to aim!
+                // In Pro mode: basket darts and speeds up when user grabs ball to aim!
                 if (currentBbDifficulty === 'pro') {
-                    bbHoopSpeed = 0.075;
-                    bbHoopPhase += (Math.random() - 0.5) * 0.6; // random dodge
+                    bbHoopSpeed = 0.09;
+                    bbHoopPhase += (Math.random() - 0.5) * 0.8; // sudden erratic dodge
                 }
 
                 drawBbTrajectory(curX, curY, bbHoopTarget.x, bbHoopTarget.y);
@@ -2013,6 +2296,12 @@
                 const curY = Math.max(10, Math.min(rect.height - 40, e.clientY - rect.top));
                 bbFileBall.style.left = `${curX - 29}px`;
                 bbFileBall.style.top = `${curY - 36}px`;
+
+                // In Pro mode: basket actively creeps away while dragging!
+                if (currentBbDifficulty === 'pro' && Math.random() < 0.25) {
+                    bbHoopPhase += 0.05;
+                }
+
                 drawBbTrajectory(curX, curY, bbHoopTarget.x, bbHoopTarget.y);
             });
 
@@ -2021,9 +2310,9 @@
                 isBbDragging = false;
                 bbFileBall.classList.remove('grabbing');
 
-                // Return speed to normal
+                // Return speed to standard
                 if (currentBbDifficulty === 'pro') {
-                    bbHoopSpeed = 0.035;
+                    bbHoopSpeed = 0.055;
                 }
 
                 const rect = bbArena.getBoundingClientRect();
