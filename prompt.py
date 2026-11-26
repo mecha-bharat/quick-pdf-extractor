@@ -215,10 +215,21 @@ RULE 9: AMENDMENT BRACKETS '[' AND ']'
   "³[the State Government]" → "[the State Government]"
 
 ================================================================================
-RULE 10: EDITORIAL FOOTNOTES
+RULE 10: EDITORIAL FOOTNOTES & REFERENCE NUMBERS (ABSOLUTELY NO FOOTNOTE DIGITS)
 ================================================================================
-- Completely ignore all editorial footnote reference numbers and footnote text at page bottoms.
-- Do not remove actual statutory numbers (dates, section references, amounts, years).
+- In legal PDFs (such as IndiaCode, state gazettes, and historical regulations), small editorial footnote numbers appear throughout the text (e.g. superscript digits ¹, ², ³, or numbers attached to words/brackets like "settlement,3", "Government4", "1[", "]2").
+- STRICT REQUIREMENT: DO NOT include any editorial footnote numbers in the output!
+  Examples of what to clean:
+  "settlement,3" → "settlement,"
+  "Government4" → "Government"
+  "¹[(1)" → "[(1)" (in description) and "8(1)" (in sub_section_no)
+  "Preamble3" → "Preamble"
+  "³[the State Government]4" → "[the State Government]"
+- NEVER remove genuine statutory numbers:
+  - Dates and years: e.g. "Regulation 44, 1793", "Act of 1886"
+  - Section references: e.g. "under section 14", "in clause (a)"
+  - Monetary amounts, percentages, and terms: e.g. "fifteen per cent", "ten years", "one hundred rupees"
+- Exclude all editorial footnote explanatory text at page bottoms (e.g. "1. Subs. by Act...", "2. Added by...", "3. Omitted by...").
 
 ================================================================================
 RULE 11: TABLE FORMATTING

@@ -45,7 +45,7 @@
         .header {
             background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #7c3aed 100%);
             color: white;
-            padding: 1.25rem 2rem;
+            padding: 1rem 1.5rem;
             box-shadow: var(--shadow);
             position: sticky;
             top: 0;
@@ -57,52 +57,59 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }
         .header-title-box h1 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 800;
             letter-spacing: -0.5px;
             display: flex;
             align-items: center;
-            gap: 0.6rem;
+            gap: 0.5rem;
         }
         .header-title-box p {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             opacity: 0.9;
-            margin-top: 0.2rem;
+            margin-top: 0.15rem;
         }
 
-        /* Home / Reset Button */
-        .btn-header-home {
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .btn-header {
             background: rgba(255, 255, 255, 0.15);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
-            padding: 0.55rem 1.1rem;
+            padding: 0.45rem 0.9rem;
             border-radius: var(--radius-sm);
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
             transition: all 0.2s;
             backdrop-filter: blur(4px);
         }
-        .btn-header-home:hover {
-            background: rgba(255, 255, 255, 0.25);
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.28);
             transform: translateY(-1px);
         }
 
-        /* Main Container */
+        /* Container & Grid */
         .container {
             max-width: 1440px;
             margin: 0 auto;
-            padding: 1.75rem 2rem;
+            padding: 1.5rem;
         }
         .grid {
             display: grid;
-            grid-template-columns: 460px 1fr;
-            gap: 1.75rem;
+            grid-template-columns: 480px 1fr;
+            gap: 1.5rem;
             align-items: start;
         }
 
@@ -115,169 +122,62 @@
             overflow: hidden;
             transition: box-shadow 0.2s;
         }
-        .card:hover {
-            box-shadow: var(--shadow);
-        }
         .card-header {
-            padding: 1rem 1.25rem;
+            padding: 0.9rem 1.25rem;
             background: #fdfdfe;
             border-bottom: 1px solid var(--border);
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
         .card-body { padding: 1.25rem; }
 
-        /* Upload Zone */
-        .upload-zone {
-            border: 2px dashed #cbd5e1;
-            border-radius: var(--radius);
-            padding: 2rem 1.25rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #f8fafc;
-        }
-        .upload-zone:hover, .upload-zone.dragover {
-            border-color: var(--primary);
-            background: var(--primary-light);
-        }
-        .upload-zone.has-file {
-            border-color: var(--success);
-            background: var(--success-light);
-        }
-        .upload-zone svg {
-            width: 42px;
-            height: 42px;
-            color: #94a3b8;
-            margin-bottom: 0.5rem;
-            transition: transform 0.2s;
-        }
-        .upload-zone:hover svg {
-            transform: translateY(-2px);
-            color: var(--primary);
-        }
-        .upload-zone.has-file svg { color: var(--success); }
-        .upload-zone p { color: var(--text-muted); font-size: 0.88rem; }
-        .upload-zone .filename {
-            color: var(--text);
-            font-weight: 700;
-            font-size: 0.95rem;
-            margin-top: 0.5rem;
-            word-break: break-all;
-        }
-        .upload-zone .meta-badge {
-            display: inline-block;
-            margin-top: 0.4rem;
-            padding: 0.25rem 0.65rem;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-
-        /* Limiter Box (> 15 Pages Alert) */
-        .limiter-box {
-            display: none;
-            margin-top: 1.25rem;
-            background: var(--warning-light);
-            border: 1px solid var(--warning-border);
-            border-radius: var(--radius);
-            padding: 1rem;
-            animation: fadeIn 0.3s ease;
-        }
-        .limiter-box.active { display: block; }
-        .limiter-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #b45309;
+        /* Input Method Tabs */
+        .input-tabs {
             display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            margin-bottom: 0.4rem;
-        }
-        .limiter-desc {
-            font-size: 0.8rem;
-            color: #92400e;
-            margin-bottom: 0.85rem;
-            line-height: 1.4;
-        }
-        .mode-options {
-            display: flex;
-            flex-direction: column;
-            gap: 0.45rem;
-        }
-        .mode-option {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.6rem;
-            padding: 0.55rem 0.65rem;
+            background: #f1f5f9;
+            padding: 0.25rem;
             border-radius: var(--radius-sm);
-            background: white;
-            border: 1px solid #fed7aa;
-            cursor: pointer;
-            transition: all 0.15s;
+            margin-bottom: 1.1rem;
+            gap: 0.25rem;
         }
-        .mode-option:hover {
-            border-color: #f97316;
-            background: #fff7ed;
-        }
-        .mode-option input[type="radio"] {
-            margin-top: 0.2rem;
-            accent-color: var(--primary);
-        }
-        .mode-option label {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--text);
-            cursor: pointer;
-        }
-        .mode-option span {
-            display: block;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-weight: normal;
-            margin-top: 0.1rem;
-        }
-
-        /* Sub-inputs */
-        .sub-inputs {
-            margin-top: 0.75rem;
-            padding-top: 0.75rem;
-            border-top: 1px dashed #fdba74;
-        }
-        .page-range-row {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.3rem;
-        }
-        .page-range-row input {
-            width: 80px;
-            padding: 0.45rem 0.5rem;
-            font-size: 0.85rem;
-            border: 1px solid var(--border);
-            border-radius: 6px;
+        .input-tab {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
             text-align: center;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        .input-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
         }
 
         /* Form elements */
-        .form-group { margin-top: 1.2rem; }
+        .form-group { margin-top: 1rem; }
         .form-group label {
             display: block;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
             color: var(--text);
             margin-bottom: 0.35rem;
         }
         .form-group small {
             display: block;
-            font-size: 0.76rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             margin-top: 0.25rem;
         }
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="number"], input[type="password"], select {
             width: 100%;
             padding: 0.65rem 0.85rem;
             border: 1px solid var(--border);
@@ -287,22 +187,22 @@
             background: white;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+        input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus {
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
         }
 
-        /* Primary Button */
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
-            padding: 0.7rem 1.4rem;
+            gap: 0.4rem;
+            padding: 0.65rem 1.25rem;
             border: none;
             border-radius: var(--radius-sm);
-            font-size: 0.92rem;
+            font-size: 0.9rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
@@ -312,7 +212,6 @@
             background: linear-gradient(135deg, var(--primary) 0%, #1d4ed8 100%);
             color: white;
             width: 100%;
-            margin-top: 1.35rem;
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
         .btn-primary:hover:not(:disabled) {
@@ -327,8 +226,8 @@
             box-shadow: none;
         }
         .btn-sm {
-            padding: 0.45rem 0.85rem;
-            font-size: 0.82rem;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
         }
         .btn-outline {
             background: white;
@@ -343,18 +242,141 @@
             background: var(--success);
             color: white;
         }
-        .btn-success:hover {
-            background: #15803d;
+        .btn-success:hover { background: #15803d; }
+
+        .btn-bherifai {
+            background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+            color: white;
+        }
+        .btn-bherifai:hover {
+            background: linear-gradient(135deg, #6d28d9 0%, #4338ca 100%);
         }
 
-        /* Real Progress Indicator (Multi-Stage with Percentage) */
+        /* Download Act Box */
+        .download-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.9rem;
+        }
+        .download-status-card {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            font-size: 0.82rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .download-status-card.active { display: block; }
+        .download-status-card .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.35rem;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        .upload-zone.has-file {
+            border-color: var(--success);
+            background: var(--success-light);
+        }
+
+        /* Limiter Box (> 15 Pages Alert) */
+        .limiter-box {
+            display: none;
+            margin-top: 1.1rem;
+            background: var(--warning-light);
+            border: 1px solid var(--warning-border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .limiter-box.active { display: block; }
+        .limiter-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #b45309;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.4rem;
+        }
+        .limiter-desc {
+            font-size: 0.78rem;
+            color: #92400e;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+        .mode-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .mode-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            border-radius: var(--radius-sm);
+            background: white;
+            border: 1px solid #fed7aa;
+            cursor: pointer;
+        }
+        .mode-option:hover {
+            border-color: #f97316;
+            background: #fff7ed;
+        }
+        .mode-option input[type="radio"] {
+            margin-top: 0.2rem;
+            accent-color: var(--primary);
+        }
+        .mode-option label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .mode-option span {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
+        .page-range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.3rem;
+        }
+        .page-range-row input {
+            width: 75px;
+            padding: 0.4rem;
+            font-size: 0.82rem;
+            text-align: center;
+        }
+
+        /* Progress Card */
         .progress-card {
             display: none;
-            margin-top: 1.25rem;
+            margin-top: 1.1rem;
             background: #f8fafc;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 1.1rem;
+            padding: 1rem;
             animation: fadeIn 0.3s ease;
         }
         .progress-card.active { display: block; }
@@ -362,28 +384,25 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 0.6rem;
+            margin-bottom: 0.5rem;
         }
         .progress-title {
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 700;
-            color: var(--text);
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.35rem;
         }
         .progress-percent {
             font-size: 0.95rem;
             font-weight: 800;
             color: var(--primary);
-            font-variant-numeric: tabular-nums;
         }
         .progress-track {
             height: 8px;
             background: #e2e8f0;
             border-radius: 4px;
             overflow: hidden;
-            position: relative;
         }
         .progress-fill {
             height: 100%;
@@ -392,23 +411,20 @@
             width: 0%;
             transition: width 0.35s ease;
         }
-
-        /* Stepper Pills */
         .progress-steps {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 0.3rem;
-            margin-top: 0.85rem;
+            gap: 0.25rem;
+            margin-top: 0.75rem;
         }
         .step-item {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             text-align: center;
-            padding: 0.35rem 0.2rem;
+            padding: 0.3rem 0.15rem;
             border-radius: 4px;
             background: #e2e8f0;
             color: #64748b;
             font-weight: 600;
-            transition: all 0.3s;
         }
         .step-item.active {
             background: var(--primary-light);
@@ -421,17 +437,16 @@
             border: 1px solid var(--success-border);
         }
         .progress-status-msg {
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: var(--text-muted);
-            margin-top: 0.6rem;
+            margin-top: 0.5rem;
             text-align: center;
-            min-height: 1.2rem;
         }
         .progress-timer {
-            font-size: 0.74rem;
+            font-size: 0.72rem;
             color: #94a3b8;
             text-align: center;
-            margin-top: 0.25rem;
+            margin-top: 0.2rem;
         }
 
         /* Results Panel */
@@ -441,38 +456,23 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.75rem;
+            gap: 0.5rem;
             flex-wrap: wrap;
-            padding-bottom: 0.85rem;
+            padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border);
         }
         .results-summary {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 0.82rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
         }
         .results-actions {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
-
-        /* Badges */
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.3rem 0.65rem;
-            border-radius: 20px;
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-        .status-success { background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); }
-        .status-warning { background: var(--warning-light); color: var(--warning); border: 1px solid var(--warning-border); }
-        .status-error { background: var(--danger-light); color: var(--danger); border: 1px solid var(--danger-border); }
 
         /* JSON Code Viewer */
         .json-viewer {
@@ -487,19 +487,19 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0.65rem 1rem;
+            padding: 0.6rem 1rem;
             background: #111827;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             color: #94a3b8;
             border-bottom: 1px solid #1f2937;
         }
         .json-viewer-content {
             padding: 1rem;
-            max-height: 620px;
+            max-height: 600px;
             overflow: auto;
             font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.82rem;
-            line-height: 1.6;
+            font-size: 0.8rem;
+            line-height: 1.55;
             white-space: pre-wrap;
             word-break: break-word;
         }
@@ -511,6 +511,189 @@
         .json-boolean { color: #f472b6; }
         .json-null { color: #94a3b8; }
 
+        /* Bherifai Split Screen Mode Overlay */
+        .bherifai-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .bherifai-modal.active { display: flex; flex-direction: column; }
+        .bherifai-container {
+            background: white;
+            border-radius: var(--radius);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .bherifai-header {
+            padding: 0.75rem 1.25rem;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .bherifai-header h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .bherifai-split {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            overflow: hidden;
+        }
+        .bherifai-pane {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+            height: 100%;
+            overflow: hidden;
+        }
+        .bherifai-pane-header {
+            padding: 0.5rem 1rem;
+            background: #f1f5f9;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .bherifai-iframe {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .bherifai-json {
+            flex: 1;
+            overflow: auto;
+            background: #090d16;
+            padding: 1rem;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.8rem;
+            line-height: 1.55;
+            color: #f1f5f9;
+        }
+
+        /* History Modal */
+        .history-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 900;
+            padding: 2rem 1rem;
+            align-items: center;
+            justify-content: center;
+        }
+        .history-modal.active { display: flex; }
+        .history-card {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 900px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .history-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .history-search-row {
+            padding: 0.75rem 1.25rem;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .history-search-row input {
+            flex: 1;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.82rem;
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+        .history-item {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            transition: all 0.15s;
+        }
+        .history-item:hover {
+            border-color: var(--primary);
+            background: #f8fafc;
+        }
+        .history-item-info h4 {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 0.2rem;
+        }
+        .history-item-info span {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            margin-right: 0.6rem;
+        }
+        .history-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        /* Preview Modal */
+        .preview-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 950;
+            padding: 1.5rem;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-modal.active { display: flex; }
+        .preview-card {
+            background: white;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+
         /* Toast */
         .toast {
             position: fixed;
@@ -521,13 +704,14 @@
             padding: 0.8rem 1.4rem;
             border-radius: var(--radius-sm);
             font-size: 0.88rem;
-            font-weight: 600;
+            font-weight: 700;
             box-shadow: var(--shadow-lg);
             transform: translateY(120px);
             opacity: 0;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 1000;
+            z-index: 2000;
             border-left: 4px solid var(--primary);
+            max-width: 400px;
         }
         .toast.visible {
             transform: translateY(0);
@@ -542,46 +726,105 @@
         @media (max-width: 960px) {
             .grid { grid-template-columns: 1fr; }
             .container { padding: 1rem; }
+            .bherifai-split { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<!-- Header with Home / Reset Button -->
+<!-- Top Navigation -->
 <div class="header">
     <div class="header-inner">
         <div class="header-title-box">
             <h1>⚖️ Quick Clause — Legal Act PDF Extractor</h1>
-            <p>Statutory Clause Unbundling &amp; Section Hierarchy Extraction for Quick Clause</p>
+            <p>Smart PDF Link Downloader · Automatic Storage in extractor_json · Bherifai Verification</p>
         </div>
-        <button class="btn-header-home" onclick="resetApp()" title="Reset and start new extraction">
-            🏠 New PDF / Home
-        </button>
+        <div class="header-nav">
+            <button class="btn-header" onclick="triggerSuggestion()" title="Suggestion button">
+                💡 Suggestion
+            </button>
+            <button class="btn-header" onclick="triggerProFeature()" title="Pro feature">
+                ⭐ Pro Features
+            </button>
+            <button class="btn-header" onclick="openHistoryModal()">
+                📜 History
+            </button>
+            <button class="btn-header" onclick="resetApp()" title="Reset to initial state">
+                🏠 New Act / Home
+            </button>
+        </div>
     </div>
 </div>
 
 <div class="container">
     <div class="grid">
-        <!-- Left Column: Upload & Options -->
+        <!-- Left Panel: Input & Controls -->
         <div>
             <div class="card">
                 <div class="card-header">
-                    <span>📄 Upload &amp; Configure</span>
+                    <span>📄 Act Source &amp; Configuration</span>
                     <button class="btn btn-sm btn-outline" onclick="resetApp()" style="font-size:0.75rem;">Reset</button>
                 </div>
                 <div class="card-body">
-                    <!-- Drop Zone -->
-                    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                        </svg>
-                        <p>Click or drag &amp; drop Act PDF here</p>
-                        <div class="filename" id="fileName"></div>
-                        <div id="pageBadge"></div>
+                    <!-- Method Toggle Tabs -->
+                    <div class="input-tabs">
+                        <button class="input-tab active" id="tabUrl" onclick="switchInputMethod('url')">
+                            🔗 From PDF Link (Recommended)
+                        </button>
+                        <button class="input-tab" id="tabUpload" onclick="switchInputMethod('upload')">
+                            📁 Direct Upload
+                        </button>
                     </div>
-                    <input type="file" id="fileInput" accept=".pdf" hidden>
 
-                    <!-- Large Document Limiter Box (> 15 Pages) -->
+                    <!-- Method 1: Download from URL (Default) -->
+                    <div id="methodUrlBlock">
+                        <div class="download-box">
+                            <div class="form-group" style="margin-top:0;">
+                                <label for="actNameInput">Act Name</label>
+                                <input type="text" id="actNameInput" placeholder="e.g. The Chit Funds Act, 1982">
+                                <small>Iss naam par folder banega: extractor_json/&lt;Act_Name&gt;/</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="actUrlInput">Act PDF Link (URL) <span style="color:var(--danger);">*</span></label>
+                                <input type="text" id="actUrlInput" placeholder="https://www.indiacode.nic.in/bitstream/...pdf">
+                                <small>Direct PDF web link</small>
+                            </div>
+
+                            <button class="btn btn-outline" id="btnDownloadAct" onclick="downloadActFromUrl()" style="width:100%; margin-top:0.85rem; font-size:0.82rem;">
+                                📥 Download &amp; Inspect PDF
+                            </button>
+
+                            <!-- Download status pill -->
+                            <div class="download-status-card" id="downloadStatusCard">
+                                <div class="status-row">
+                                    <strong id="dlActNameText" style="color:var(--success);">Act Downloaded</strong>
+                                    <span id="dlPageCountBadge" style="font-weight:700;"></span>
+                                </div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); word-break:break-all;" id="dlFolderPathText"></div>
+                                <div style="margin-top:0.5rem; display:flex; gap:0.4rem;">
+                                    <button class="btn btn-sm btn-outline" onclick="previewCurrentPdf()" style="font-size:0.75rem;">
+                                        👁️ Preview PDF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Method 2: Direct File Upload -->
+                    <div id="methodUploadBlock" style="display:none;">
+                        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" style="width:36px; height:36px; color:#94a3b8; margin-bottom:0.4rem;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                            <p style="font-size:0.85rem; color:var(--text-muted);">Click or drag &amp; drop PDF file here</p>
+                            <div id="fileName" style="font-weight:700; font-size:0.88rem; margin-top:0.3rem;"></div>
+                            <div id="pageBadge"></div>
+                        </div>
+                        <input type="file" id="fileInput" accept=".pdf" hidden>
+                    </div>
+
+                    <!-- Limiter Box (> 15 Pages Alert) -->
                     <div class="limiter-box" id="limiterBox">
                         <div class="limiter-title">
                             ⚠️ Large Document Detected
@@ -618,19 +861,19 @@
 
                         <!-- Sub-inputs: Page Range -->
                         <div class="sub-inputs" id="pageRangeInputs">
-                            <label style="font-size:0.8rem; font-weight:700; color:#92400e; display:block;">Select Pages:</label>
+                            <label style="font-size:0.78rem; font-weight:700; color:#92400e; display:block;">Select Pages:</label>
                             <div class="page-range-row">
-                                <span style="font-size:0.8rem; color:var(--text-muted);">From Page:</span>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">From:</span>
                                 <input type="number" id="startPage" min="1" value="1">
-                                <span style="font-size:0.8rem; color:var(--text-muted);">To Page:</span>
+                                <span style="font-size:0.78rem; color:var(--text-muted);">To:</span>
                                 <input type="number" id="endPage" min="1" value="15">
-                                <span style="font-size:0.75rem; color:#b45309;" id="pageRangeMaxTip">(Max 15 recommended)</span>
+                                <span style="font-size:0.72rem; color:#b45309;">(Max 15 recommended)</span>
                             </div>
                         </div>
 
                         <!-- Sub-inputs: Section Range Modal -->
                         <div class="sub-inputs" id="sectionRangeInputs" style="display:none;">
-                            <label style="font-size:0.8rem; font-weight:700; color:#92400e; display:block;">Section Range:</label>
+                            <label style="font-size:0.78rem; font-weight:700; color:#92400e; display:block;">Section Range:</label>
                             <input type="text" id="sectionRangeModal" placeholder="e.g. 1-25 or 1-30" style="margin-top:0.3rem;">
                         </div>
                     </div>
@@ -655,8 +898,8 @@
                         <small>gemini 3.5 flash tested hai , apna kida baju me rakho</small>
                     </div>
 
-                    <!-- BYOK: Bring Your Own Key (Mandatory) -->
-                    <div class="form-group" style="background:#f8fafc; padding:0.9rem; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; margin-top:1.2rem;">
+                    <!-- BYOK: Bring Your Own Key -->
+                    <div class="form-group" style="background:#f8fafc; padding:0.9rem; border-radius:var(--radius-sm); border:1.5px solid #cbd5e1; margin-top:1.1rem;">
                         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.35rem;">
                             <label for="apiKeyInput" style="margin:0; font-size:0.85rem; font-weight:700; display:flex; align-items:center; gap:0.35rem;">
                                 🔑 Gemini API Key <span style="color:var(--danger); font-size:0.75rem;">(Required)</span>
@@ -672,7 +915,7 @@
                     </div>
 
                     <!-- Extract Button -->
-                    <button class="btn btn-primary" id="extractBtn" disabled onclick="startExtraction()">
+                    <button class="btn btn-primary" id="extractBtn" onclick="startExtraction()" style="margin-top:1.25rem;">
                         🚀 LOQ phek ke maro
                     </button>
 
@@ -690,7 +933,7 @@
 
                         <!-- Multi-Step Indicators -->
                         <div class="progress-steps">
-                            <div class="step-item" id="step1">1. Upload</div>
+                            <div class="step-item" id="step1">1. Download</div>
                             <div class="step-item" id="step2">2. AI Parse</div>
                             <div class="step-item" id="step3">3. Clauses</div>
                             <div class="step-item" id="step4">4. JSON</div>
@@ -703,13 +946,20 @@
             </div>
         </div>
 
-        <!-- Right Column: Results Viewer -->
+        <!-- Right Panel: Results Viewer -->
         <div>
             <!-- Active Results Card -->
             <div class="card results" id="resultsCard">
                 <div class="card-header">
-                    <span>📋 Extraction Results</span>
-                    <button class="btn btn-sm btn-outline" onclick="resetApp()">🔄 New Extraction</button>
+                    <span>📋 Extraction Results (<span id="resultActTitle"></span>)</span>
+                    <div style="display:flex; gap:0.4rem;">
+                        <button class="btn btn-sm btn-bherifai" onclick="openBherifaiSplit()">
+                            ⚖️ Bherifai
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="previewCurrentPdf()">
+                            👁️ PDF
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="results-toolbar">
@@ -747,13 +997,106 @@
     </div>
 </div>
 
+<!-- ========================================================================= -->
+<!-- BHERIFAI SPLIT SCREEN MODAL (Verification Mode)                           -->
+<!-- ========================================================================= -->
+<div class="bherifai-modal" id="bherifaiModal">
+    <div class="bherifai-container">
+        <div class="bherifai-header">
+            <h2>⚖️ Bherifai — Split Screen Verification (<span id="bherifaiActName"></span>)</h2>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <button class="btn btn-sm btn-outline" onclick="copyBherifaiJson()" style="color:white; border-color:rgba(255,255,255,0.4);">
+                    📋 Copy JSON
+                </button>
+                <button class="btn btn-sm btn-outline" onclick="closeBherifai()" style="color:white; border-color:rgba(255,255,255,0.4);">
+                    ❌ Close Bherifai
+                </button>
+            </div>
+        </div>
+        <div class="bherifai-split">
+            <!-- Left: PDF Viewer -->
+            <div class="bherifai-pane">
+                <div class="bherifai-pane-header">
+                    <span>📄 Original PDF Document</span>
+                    <span id="bherifaiPdfPageBadge"></span>
+                </div>
+                <iframe class="bherifai-iframe" id="bherifaiPdfIframe" src="about:blank"></iframe>
+            </div>
+
+            <!-- Right: Extracted JSON Viewer -->
+            <div class="bherifai-pane">
+                <div class="bherifai-pane-header">
+                    <span>📋 Extracted Quick Clause JSON</span>
+                    <span id="bherifaiJsonStatsBadge"></span>
+                </div>
+                <div class="bherifai-json" id="bherifaiJsonContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- HISTORY MODAL                                                             -->
+<!-- ========================================================================= -->
+<div class="history-modal" id="historyModal" onclick="closeHistoryOnBackdrop(event)">
+    <div class="history-card" onclick="event.stopPropagation()">
+        <div class="history-header">
+            <h3 style="font-size:1.1rem; font-weight:700;">📜 Act Extraction History (extractor_json/)</h3>
+            <button class="btn btn-sm btn-outline" onclick="closeHistoryModal()">✕</button>
+        </div>
+        <div class="history-search-row">
+            <input type="text" id="historySearchInput" placeholder="🔍 Search Acts by name..." oninput="filterHistoryList()">
+            <button class="btn btn-sm btn-outline" onclick="deleteSelectedHistoryItems()" title="Delete checked items">
+                🗑️ Delete Selected
+            </button>
+            <button class="btn btn-sm btn-outline" onclick="clearAllHistoryItems()" style="color:var(--danger);" title="Clear entire history">
+                ⚠️ Clear All
+            </button>
+        </div>
+        <div class="history-list" id="historyListContent">
+            <!-- Filled dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- STANDALONE PDF PREVIEW MODAL                                             -->
+<!-- ========================================================================= -->
+<div class="preview-modal" id="previewModal" onclick="closePreviewOnBackdrop(event)">
+    <div class="preview-card" onclick="event.stopPropagation()">
+        <div class="card-header" style="background:#0f172a; color:white;">
+            <span id="previewModalTitle">📄 PDF Preview</span>
+            <button class="btn btn-sm btn-outline" onclick="closePreviewModal()" style="color:white; border-color:rgba(255,255,255,0.4);">✕ Close</button>
+        </div>
+        <iframe id="previewIframe" style="flex:1; width:100%; height:100%; border:none;" src="about:blank"></iframe>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT                                                                -->
+<!-- ========================================================================= -->
 <script>
+    // Elements
+    const actNameInput = document.getElementById('actNameInput');
+    const actUrlInput = document.getElementById('actUrlInput');
+    const btnDownloadAct = document.getElementById('btnDownloadAct');
+    const downloadStatusCard = document.getElementById('downloadStatusCard');
+    const dlActNameText = document.getElementById('dlActNameText');
+    const dlPageCountBadge = document.getElementById('dlPageCountBadge');
+    const dlFolderPathText = document.getElementById('dlFolderPathText');
+
+    const methodUrlBlock = document.getElementById('methodUrlBlock');
+    const methodUploadBlock = document.getElementById('methodUploadBlock');
+    const tabUrl = document.getElementById('tabUrl');
+    const tabUpload = document.getElementById('tabUpload');
+
     const uploadZone = document.getElementById('uploadZone');
     const fileInput = document.getElementById('fileInput');
     const fileName = document.getElementById('fileName');
     const pageBadge = document.getElementById('pageBadge');
+
     const limiterBox = document.getElementById('limiterBox');
     const detectedPageCount = document.getElementById('detectedPageCount');
     const generalSectionGroup = document.getElementById('generalSectionGroup');
@@ -761,18 +1104,24 @@
     const sectionRangeInputs = document.getElementById('sectionRangeInputs');
     const startPageInput = document.getElementById('startPage');
     const endPageInput = document.getElementById('endPage');
+
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const toggleKeyText = document.getElementById('toggleKeyText');
     const extractBtn = document.getElementById('extractBtn');
+
     const progressCard = document.getElementById('progressCard');
     const progressFill = document.getElementById('progressFill');
     const progressPercent = document.getElementById('progressPercent');
     const progressStatusMsg = document.getElementById('progressStatusMsg');
     const progressTimer = document.getElementById('progressTimer');
+
     const resultsCard = document.getElementById('resultsCard');
     const errorCard = document.getElementById('errorCard');
 
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const toggleKeyText = document.getElementById('toggleKeyText');
-
+    let currentInputMethod = 'url'; // 'url' or 'upload'
+    let currentFolderName = '';
+    let currentActName = '';
+    let currentPdfUrl = '';
     let selectedFile = null;
     let extractedData = null;
     let totalPdfPages = 0;
@@ -780,36 +1129,9 @@
     let progressInterval = null;
     let startTime = null;
 
-    // Reset Function (Home Button)
-    function resetApp() {
-        if (progressInterval) clearInterval(progressInterval);
+    let historyItemsCache = [];
 
-        selectedFile = null;
-        extractedData = null;
-        totalPdfPages = 0;
-        currentMode = 'full';
-
-        fileInput.value = '';
-        fileName.textContent = '';
-        pageBadge.innerHTML = '';
-        uploadZone.classList.remove('has-file');
-
-        limiterBox.classList.remove('active');
-        generalSectionGroup.style.display = 'block';
-        document.getElementById('sectionRange').value = '';
-        document.getElementById('sectionRangeModal').value = '';
-
-        extractBtn.disabled = true;
-        progressCard.classList.remove('active');
-        resultsCard.style.display = 'none';
-        resultsCard.classList.remove('active');
-        errorCard.style.display = 'none';
-
-        updateStepVisuals(0);
-        showToast('🏠 Ready for new PDF extraction');
-    }
-
-    // BYOK: Load saved API key on startup and save on input
+    // On Load
     document.addEventListener('DOMContentLoaded', () => {
         const savedKey = localStorage.getItem('byok_gemini_key') || '';
         if (savedKey) apiKeyInput.value = savedKey;
@@ -835,72 +1157,140 @@
         }
     }
 
-    // File input change
-    fileInput.addEventListener('change', async (e) => {
-        if (e.target.files.length > 0) {
-            await handleFileSelected(e.target.files[0]);
-        }
-    });
+    // Funny Popup Buttons
+    function triggerSuggestion() {
+        alert("ee tu ja re , jo mil raha hai usme rehe");
+    }
 
-    // Drag & Drop
-    uploadZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadZone.classList.add('dragover');
-    });
-    uploadZone.addEventListener('dragleave', () => {
-        uploadZone.classList.remove('dragover');
-    });
-    uploadZone.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        uploadZone.classList.remove('dragover');
-        if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].name.toLowerCase().endsWith('.pdf')) {
-            fileInput.files = e.dataTransfer.files;
-            await handleFileSelected(e.dataTransfer.files[0]);
-        }
-    });
+    function triggerProFeature() {
+        alert("5000 stipened hai , aukat me raho ");
+    }
 
-    async function handleFileSelected(file) {
-        selectedFile = file;
-        fileName.textContent = file.name + ` (${formatSize(file.size)})`;
-        pageBadge.innerHTML = '<span class="meta-badge status-warning">⏳ Inspecting page count...</span>';
-        uploadZone.classList.add('has-file');
-        extractBtn.disabled = true;
+    // Input Method Switcher
+    function switchInputMethod(method) {
+        currentInputMethod = method;
+        if (method === 'url') {
+            tabUrl.classList.add('active');
+            tabUpload.classList.remove('active');
+            methodUrlBlock.style.display = 'block';
+            methodUploadBlock.style.display = 'none';
+        } else {
+            tabUrl.classList.remove('active');
+            tabUpload.classList.add('active');
+            methodUrlBlock.style.display = 'none';
+            methodUploadBlock.style.display = 'block';
+        }
+    }
+
+    // Download Act from URL
+    async function downloadActFromUrl() {
+        const url = actUrlInput.value.trim();
+        if (!url) {
+            alert("abbe pdf link de na , gandmasti mat kar");
+            showToast("abbe pdf link de na , gandmasti mat kar");
+            actUrlInput.focus();
+            return;
+        }
+
+        btnDownloadAct.disabled = true;
+        btnDownloadAct.textContent = '⏳ Downloading & Inspecting PDF...';
 
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('act_url', url);
+        formData.append('act_name', actNameInput.value.trim());
 
         try {
-            const res = await fetch('/api/inspect', { method: 'POST', body: formData });
+            const res = await fetch('/api/download-act', { method: 'POST', body: formData });
             const data = await res.json();
 
-            if (!res.ok) throw new Error(data.detail || 'Could not inspect PDF');
+            if (!res.ok) throw new Error(data.detail || 'Download failed');
 
+            currentFolderName = data.folder_name;
+            currentActName = data.act_name;
+            currentPdfUrl = data.pdf_url;
             totalPdfPages = data.total_pages;
 
+            dlActNameText.textContent = `✓ ${currentActName}`;
+            dlPageCountBadge.textContent = `${totalPdfPages} pages`;
+            dlFolderPathText.textContent = `Saved to: extractor_json/${currentFolderName}/`;
+            downloadStatusCard.classList.add('active');
+
             if (data.exceeds_threshold) {
-                pageBadge.innerHTML = `<span class="meta-badge status-warning">⚠️ ${totalPdfPages} pages (Limiter Recommended)</span>`;
                 detectedPageCount.textContent = totalPdfPages;
                 startPageInput.value = 1;
                 endPageInput.value = Math.min(15, totalPdfPages);
                 endPageInput.max = totalPdfPages;
-
                 limiterBox.classList.add('active');
                 generalSectionGroup.style.display = 'none';
                 selectMode('page_range');
                 showToast(`⚠️ PDF has ${totalPdfPages} pages (>15). Range options enabled.`);
             } else {
-                pageBadge.innerHTML = `<span class="meta-badge status-success">✓ ${totalPdfPages} pages detected</span>`;
                 limiterBox.classList.remove('active');
                 generalSectionGroup.style.display = 'block';
                 currentMode = 'full';
+                showToast(`✓ PDF downloaded (${totalPdfPages} pages)`);
             }
 
-            extractBtn.disabled = false;
         } catch (err) {
-            pageBadge.innerHTML = `<span class="meta-badge status-error">Error checking pages</span>`;
-            extractBtn.disabled = false;
+            alert(err.message);
+            showToast(`❌ ${err.message}`);
+        } finally {
+            btnDownloadAct.disabled = false;
+            btnDownloadAct.textContent = '📥 Download & Inspect PDF';
         }
     }
+
+    // Direct File Upload handling
+    fileInput.addEventListener('change', async (e) => {
+        if (e.target.files.length > 0) {
+            selectedFile = e.target.files[0];
+            fileName.textContent = selectedFile.name + ` (${formatSize(selectedFile.size)})`;
+            pageBadge.innerHTML = '<span class="status status-warning">⏳ Inspecting pages...</span>';
+            uploadZone.classList.add('has-file');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const res = await fetch('/api/inspect', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || 'Inspect failed');
+
+                totalPdfPages = data.total_pages;
+                currentActName = selectedFile.name.replace(/\.pdf$/i, '');
+
+                if (data.exceeds_threshold) {
+                    pageBadge.innerHTML = `<span class="status status-warning">⚠️ ${totalPdfPages} pages</span>`;
+                    detectedPageCount.textContent = totalPdfPages;
+                    startPageInput.value = 1;
+                    endPageInput.value = Math.min(15, totalPdfPages);
+                    endPageInput.max = totalPdfPages;
+                    limiterBox.classList.add('active');
+                    generalSectionGroup.style.display = 'none';
+                    selectMode('page_range');
+                } else {
+                    pageBadge.innerHTML = `<span class="status status-success">✓ ${totalPdfPages} pages</span>`;
+                    limiterBox.classList.remove('active');
+                    generalSectionGroup.style.display = 'block';
+                    currentMode = 'full';
+                }
+            } catch (err) {
+                pageBadge.innerHTML = `<span class="status status-error">Error checking pages</span>`;
+            }
+        }
+    });
+
+    // Drag and Drop
+    uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => { uploadZone.classList.remove('dragover'); });
+    uploadZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0 && e.dataTransfer.files[0].name.toLowerCase().endsWith('.pdf')) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
 
     function selectMode(mode) {
         currentMode = mode;
@@ -920,7 +1310,6 @@
         }
     }
 
-    // Step Visual Highlights
     function updateStepVisuals(step) {
         for (let i = 1; i <= 4; i++) {
             const el = document.getElementById(`step${i}`);
@@ -936,8 +1325,24 @@
         }
     }
 
+    // MAIN EXTRACTION
     async function startExtraction() {
-        if (!selectedFile) return;
+        // Validation: Verify we have either a downloaded URL Act or an uploaded File
+        if (currentInputMethod === 'url' && !currentFolderName) {
+            const urlVal = actUrlInput.value.trim();
+            if (!urlVal) {
+                alert("abbe pdf link de na , gandmasti mat kar");
+                showToast("abbe pdf link de na , gandmasti mat kar");
+                actUrlInput.focus();
+                return;
+            }
+            // Auto-trigger download first
+            await downloadActFromUrl();
+            if (!currentFolderName) return;
+        } else if (currentInputMethod === 'upload' && !selectedFile) {
+            showToast("📁 Pehle PDF file select ya upload karo!");
+            return;
+        }
 
         // BYOK: Verify API Key is provided
         const userApiKey = apiKeyInput.value.trim();
@@ -955,33 +1360,32 @@
         progressCard.classList.add('active');
         startTime = Date.now();
 
-        let progress = 5;
-        progressFill.style.width = '5%';
-        progressPercent.textContent = '5%';
+        let progress = 8;
+        progressFill.style.width = '8%';
+        progressPercent.textContent = '8%';
         updateStepVisuals(1);
-        progressStatusMsg.textContent = 'Uploading PDF and checking segment boundaries...';
+        progressStatusMsg.textContent = 'Preparing PDF and initiating extraction...';
 
-        // Animated Progressive Progress Bar
         progressInterval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
             progressTimer.textContent = `Elapsed: ${elapsed}s`;
 
             if (elapsed < 4) {
-                progress = Math.min(22, progress + 3);
+                progress = Math.min(25, progress + 3);
                 updateStepVisuals(1);
-                progressStatusMsg.textContent = 'Preparing PDF and uploading to Gemini Files API...';
+                progressStatusMsg.textContent = 'Preparing PDF segment & uploading to Gemini API...';
             } else if (elapsed < 14) {
-                progress = Math.min(52, progress + 2);
+                progress = Math.min(55, progress + 2);
                 updateStepVisuals(2);
                 progressStatusMsg.textContent = 'Gemini AI parsing statutory hierarchy & sections...';
             } else if (elapsed < 28) {
                 progress = Math.min(78, progress + 1.5);
                 updateStepVisuals(3);
-                progressStatusMsg.textContent = 'Extracting subsections & unbundling lettered clauses (a, b, c)...';
+                progressStatusMsg.textContent = 'Unbundling ordinary clauses & stripping footnote references...';
             } else if (elapsed < 55) {
                 progress = Math.min(94, progress + 0.6);
                 updateStepVisuals(4);
-                progressStatusMsg.textContent = 'Formatting 6-key Quick Clause JSON & validating provisos...';
+                progressStatusMsg.textContent = 'Formatting 6-key Quick Clause JSON & saving to extractor_json...';
             } else {
                 progress = Math.min(98, progress + 0.2);
                 progressStatusMsg.textContent = `Finalizing output... (${elapsed}s elapsed)`;
@@ -993,18 +1397,22 @@
         }, 500);
 
         const formData = new FormData();
-        formData.append('file', selectedFile);
         formData.append('api_key', userApiKey);
         formData.append('model', document.getElementById('modelSelect').value);
 
+        if (currentInputMethod === 'url' && currentFolderName) {
+            formData.append('folder_name', currentFolderName);
+            formData.append('act_name', currentActName);
+        } else if (selectedFile) {
+            formData.append('file', selectedFile);
+            formData.append('act_name', currentActName || selectedFile.name);
+        }
+
         if (limiterBox.classList.contains('active')) {
             formData.append('mode', currentMode);
-
             if (currentMode === 'page_range') {
-                const sPage = parseInt(startPageInput.value, 10) || 1;
-                const ePage = parseInt(endPageInput.value, 10) || 15;
-                formData.append('start_page', sPage);
-                formData.append('end_page', ePage);
+                formData.append('start_page', parseInt(startPageInput.value, 10) || 1);
+                formData.append('end_page', parseInt(endPageInput.value, 10) || 15);
             } else if (currentMode === 'section_range') {
                 formData.append('section_range', document.getElementById('sectionRangeModal').value);
             } else {
@@ -1022,25 +1430,27 @@
             });
 
             clearInterval(progressInterval);
-
             const result = await response.json();
 
             if (!response.ok) {
                 throw new Error(result.detail || 'Extraction failed');
             }
 
-            // Success -> 100%
             progressFill.style.width = '100%';
             progressPercent.textContent = '100%';
-            updateStepVisuals(5); // all completed
+            updateStepVisuals(5);
             progressStatusMsg.textContent = '✅ Extraction & verification complete!';
 
             extractedData = result.data;
-            const jsonStr = JSON.stringify(result.data, null, 2);
+            currentFolderName = result.folder_name;
+            currentActName = result.act_name;
+            currentPdfUrl = result.pdf_url;
 
+            const jsonStr = JSON.stringify(result.data, null, 2);
             const modelNote = result.model_used ? ` · Model: ${result.model_used}` : '';
             const pageNote = result.pages_processed ? ` · Pages: ${result.pages_processed}` : '';
 
+            document.getElementById('resultActTitle').textContent = currentActName;
             document.getElementById('resultInfo').textContent =
                 `${result.total_sections} sections · ${result.total_objects} provisions${pageNote}${modelNote}`;
             document.getElementById('downloadLink').href = result.download_url;
@@ -1053,8 +1463,8 @@
                 progressCard.classList.remove('active');
                 resultsCard.style.display = 'block';
                 resultsCard.classList.add('active');
-                showToast('✅ Extraction complete! All clauses verified.');
-            }, 600);
+                showToast(`✅ Extraction complete! Saved in extractor_json/${currentFolderName}/`);
+            }, 500);
 
         } catch (err) {
             clearInterval(progressInterval);
@@ -1067,6 +1477,305 @@
         }
     }
 
+    // Reset App (Home Button)
+    function resetApp() {
+        if (progressInterval) clearInterval(progressInterval);
+
+        selectedFile = null;
+        extractedData = null;
+        totalPdfPages = 0;
+        currentFolderName = '';
+        currentActName = '';
+        currentPdfUrl = '';
+        currentMode = 'full';
+
+        actNameInput.value = '';
+        actUrlInput.value = '';
+        fileInput.value = '';
+        fileName.textContent = '';
+        pageBadge.innerHTML = '';
+        downloadStatusCard.classList.remove('active');
+        uploadZone.classList.remove('has-file');
+
+        limiterBox.classList.remove('active');
+        generalSectionGroup.style.display = 'block';
+        document.getElementById('sectionRange').value = '';
+        document.getElementById('sectionRangeModal').value = '';
+
+        extractBtn.disabled = false;
+        progressCard.classList.remove('active');
+        resultsCard.style.display = 'none';
+        resultsCard.classList.remove('active');
+        errorCard.style.display = 'none';
+
+        updateStepVisuals(0);
+        showToast('🏠 Ready for new Act');
+    }
+
+    // Bherifai (Split Screen Verification Mode)
+    function openBherifaiSplit(actName, pdfUrl, jsonData) {
+        const title = actName || currentActName || 'Act Verification';
+        const pdf = pdfUrl || currentPdfUrl;
+        const data = jsonData || extractedData;
+
+        if (!pdf) {
+            showToast('📄 Pehle PDF download ya select karein!');
+            return;
+        }
+        if (!data) {
+            showToast('📋 Pehle JSON extract karein ya history se load karein!');
+            return;
+        }
+
+        document.getElementById('bherifaiActName').textContent = title;
+        document.getElementById('bherifaiPdfIframe').src = pdf;
+        document.getElementById('bherifaiJsonContent').innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+        document.getElementById('bherifaiJsonStatsBadge').textContent = `${data.length} provisions`;
+        document.getElementById('bherifaiPdfPageBadge').textContent = totalPdfPages ? `${totalPdfPages} pages` : '';
+
+        document.getElementById('bherifaiModal').classList.add('active');
+    }
+
+    function closeBherifai() {
+        document.getElementById('bherifaiModal').classList.remove('active');
+        document.getElementById('bherifaiPdfIframe').src = 'about:blank';
+    }
+
+    function copyBherifaiJson() {
+        if (!extractedData) return;
+        navigator.clipboard.writeText(JSON.stringify(extractedData, null, 2)).then(() => {
+            showToast('📋 JSON copied from Bherifai!');
+        });
+    }
+
+    // PDF Preview
+    function previewCurrentPdf() {
+        if (!currentPdfUrl) {
+            showToast('📄 No PDF available to preview');
+            return;
+        }
+        document.getElementById('previewModalTitle').textContent = `📄 PDF Preview: ${currentActName || 'Act'}`;
+        document.getElementById('previewIframe').src = currentPdfUrl;
+        document.getElementById('previewModal').classList.add('active');
+    }
+
+    function closePreviewModal() {
+        document.getElementById('previewModal').classList.remove('active');
+        document.getElementById('previewIframe').src = 'about:blank';
+    }
+
+    function closePreviewOnBackdrop(e) {
+        if (e.target.id === 'previewModal') closePreviewModal();
+    }
+
+    // History Modal Operations
+    async function openHistoryModal() {
+        document.getElementById('historyModal').classList.add('active');
+        await loadHistoryItems();
+    }
+
+    function closeHistoryModal() {
+        document.getElementById('historyModal').classList.remove('active');
+    }
+
+    function closeHistoryOnBackdrop(e) {
+        if (e.target.id === 'historyModal') closeHistoryModal();
+    }
+
+    async function loadHistoryItems() {
+        const listEl = document.getElementById('historyListContent');
+        listEl.innerHTML = '<div style="text-align:center; padding:1.5rem; color:var(--text-muted);">⏳ Loading history...</div>';
+
+        try {
+            const res = await fetch('/api/history');
+            const data = await res.json();
+            historyItemsCache = data.items || [];
+            renderHistoryList(historyItemsCache);
+        } catch (err) {
+            listEl.innerHTML = `<div style="text-align:center; padding:1.5rem; color:var(--danger);">Error loading history: ${err.message}</div>`;
+        }
+    }
+
+    function filterHistoryList() {
+        const query = document.getElementById('historySearchInput').value.toLowerCase().trim();
+        if (!query) {
+            renderHistoryList(historyItemsCache);
+            return;
+        }
+        const filtered = historyItemsCache.filter(item =>
+            item.act_name.toLowerCase().includes(query) || item.folder_name.toLowerCase().includes(query)
+        );
+        renderHistoryList(filtered);
+    }
+
+    function renderHistoryList(items) {
+        const listEl = document.getElementById('historyListContent');
+        if (!items || items.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:var(--text-muted);">No Acts found in extractor_json/. Download or extract an Act first!</div>';
+            return;
+        }
+
+        let html = '';
+        items.forEach(item => {
+            html += `
+                <div class="history-item" id="histItem_${item.folder_name}">
+                    <div style="display:flex; align-items:center; gap:0.6rem;">
+                        <input type="checkbox" class="hist-select-cb" value="${item.folder_name}">
+                        <div class="history-item-info">
+                            <h4>${escapeHtml(item.act_name)}</h4>
+                            <div>
+                                <span>📁 ${escapeHtml(item.folder_name)}</span>
+                                <span>📄 ${item.total_pages || '?'} pages</span>
+                                <span>⚖️ ${item.total_sections || 0} sections</span>
+                                <span>🕒 ${escapeHtml(item.created_at || '')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="history-item-actions">
+                        ${item.has_json ? `
+                            <button class="btn btn-sm btn-bherifai" onclick="loadHistoryBherifai('${item.folder_name}', '${escapeHtml(item.act_name)}')">
+                                ⚖️ Bherifai
+                            </button>
+                            <button class="btn btn-sm btn-outline" onclick="loadHistoryJson('${item.folder_name}')">
+                                👁️ View
+                            </button>
+                            <a class="btn btn-sm btn-success" href="${item.download_url}" download>
+                                ⬇ JSON
+                            </a>
+                        ` : `
+                            <button class="btn btn-sm btn-primary" onclick="selectHistoryForExtraction('${item.folder_name}', '${escapeHtml(item.act_name)}')">
+                                🚀 Extract
+                            </button>
+                        `}
+                        ${item.has_pdf ? `
+                            <button class="btn btn-sm btn-outline" onclick="openDirectPdfPreview('${item.pdf_url}', '${escapeHtml(item.act_name)}')">
+                                📄 PDF
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-sm btn-outline" onclick="deleteSingleHistoryItem('${item.folder_name}')" style="color:var(--danger);" title="Delete Act">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        listEl.innerHTML = html;
+    }
+
+    async function loadHistoryJson(folderName) {
+        try {
+            const res = await fetch(`/api/history/${folderName}`);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Load failed');
+
+            extractedData = data.data;
+            currentFolderName = data.folder_name;
+            currentActName = data.act_name;
+            currentPdfUrl = data.pdf_url;
+
+            const jsonStr = JSON.stringify(extractedData, null, 2);
+            document.getElementById('resultActTitle').textContent = currentActName;
+            document.getElementById('resultInfo').textContent = `${data.meta.total_sections || 0} sections · ${data.meta.total_provisions || 0} provisions`;
+            document.getElementById('downloadLink').href = data.download_url;
+            document.getElementById('downloadLink').download = `${currentFolderName}.json`;
+            document.getElementById('jsonFileName').textContent = `${currentFolderName}.json`;
+            document.getElementById('jsonSize').textContent = formatSize(new Blob([jsonStr]).size);
+            document.getElementById('jsonContent').innerHTML = syntaxHighlight(jsonStr);
+
+            closeHistoryModal();
+            resultsCard.style.display = 'block';
+            resultsCard.classList.add('active');
+            showToast(`Loaded ${currentActName}`);
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+        }
+    }
+
+    async function loadHistoryBherifai(folderName, actName) {
+        try {
+            const res = await fetch(`/api/history/${folderName}`);
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || 'Load failed');
+
+            extractedData = data.data;
+            currentFolderName = data.folder_name;
+            currentActName = actName || data.act_name;
+            currentPdfUrl = data.pdf_url;
+            totalPdfPages = data.meta.total_pages || 0;
+
+            closeHistoryModal();
+            openBherifaiSplit(currentActName, currentPdfUrl, extractedData);
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+        }
+    }
+
+    function selectHistoryForExtraction(folderName, actName) {
+        currentFolderName = folderName;
+        currentActName = actName;
+        actNameInput.value = actName;
+        switchInputMethod('url');
+        closeHistoryModal();
+        showToast(`Selected ${actName} for extraction. Click 'LOQ phek ke maro'!`);
+    }
+
+    function openDirectPdfPreview(pdfUrl, title) {
+        document.getElementById('previewModalTitle').textContent = `📄 PDF Preview: ${title}`;
+        document.getElementById('previewIframe').src = pdfUrl;
+        document.getElementById('previewModal').classList.add('active');
+    }
+
+    async function deleteSingleHistoryItem(folderName) {
+        if (!confirm(`Are you sure you want to delete ${folderName} and its files?`)) return;
+
+        try {
+            const res = await fetch(`/api/history/${folderName}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Delete failed');
+            showToast(`Deleted ${folderName}`);
+            await loadHistoryItems();
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+        }
+    }
+
+    async function deleteSelectedHistoryItems() {
+        const checked = Array.from(document.querySelectorAll('.hist-select-cb:checked')).map(cb => cb.value);
+        if (checked.length === 0) {
+            showToast('Pehle checkbox select karein!');
+            return;
+        }
+
+        if (!confirm(`Delete ${checked.length} selected Act(s)?`)) return;
+
+        try {
+            const res = await fetch('/api/history/delete-selected', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ folder_names: checked })
+            });
+            if (!res.ok) throw new Error('Delete failed');
+            showToast(`Deleted ${checked.length} Act(s)`);
+            await loadHistoryItems();
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+        }
+    }
+
+    async function clearAllHistoryItems() {
+        if (!confirm('⚠️ WARNING: Kya aap sach me saare Acts aur JSONs delete karna chahte hain?')) return;
+
+        try {
+            const res = await fetch('/api/history/clear-all', { method: 'POST' });
+            if (!res.ok) throw new Error('Clear failed');
+            showToast('All history cleared from extractor_json/');
+            await loadHistoryItems();
+        } catch (err) {
+            showToast(`❌ ${err.message}`);
+        }
+    }
+
+    // Copy JSON
     function copyJson() {
         if (!extractedData) return;
         const jsonStr = JSON.stringify(extractedData, null, 2);
@@ -1079,6 +1788,7 @@
         });
     }
 
+    // Syntax Highlight
     function syntaxHighlight(json) {
         return json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
             .replace(
@@ -1102,16 +1812,22 @@
     }
 
     function formatSize(bytes) {
+        if (!bytes) return '0 B';
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
     function showToast(message) {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.classList.add('visible');
-        setTimeout(() => toast.classList.remove('visible'), 3200);
+        setTimeout(() => toast.classList.remove('visible'), 3500);
     }
 </script>
 

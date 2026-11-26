@@ -1,12 +1,15 @@
 """
 PDF Extraction API for Legal Acts — Quick Clause Format
 
-FastAPI backend that:
-1. Accepts PDF uploads
-2. Quick-inspects PDF page count (> 15 pages asks user for page range / section range)
-3. Slices PDF if page range is selected for faster, reliable AI processing
-4. Sends PDF to Gemini API for intelligent structural parsing
-5. Returns structured JSON per Quick Clause schema with retry logic & fallback
+Features:
+1. Act Link (URL) + Act Name input with automatic Python downloader (no API required)
+2. Storage in extractor_json/<Act_Name>/ with PDF, JSON, and metadata
+3. PDF Preview & Bherifai (Split-screen verification of PDF vs JSON)
+4. History management with search, selective delete, and clear-all
+5. Mandatory BYOK (Bring Your Own Key) stored in client browser
+6. Footnote reference number stripping & section heading cleaning
+7. Quoted amendment block preservation ("...") & Proviso internal clause preservation
+8. Ordinary clause unbundling (a, b, c) into individual JSON objects
 """
 
 import asyncio
@@ -14,11 +17,15 @@ import io
 import json
 import logging
 import os
+import re
+import shutil
 import tempfile
 import time
+import urllib.parse
 import uuid
 from pathlib import Path
 
+import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,8 +47,8 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Legal Act PDF Extractor",
-    description="Upload a legal Act PDF and get structured JSON for Quick Clause",
-    version="1.2.0",
+    description="Upload or Link a legal Act PDF and get structured JSON for Quick Clause",
+    version="2.0.0",
 )
 
 app.add_middleware(
@@ -52,16 +59,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Directory to store generated JSON outputs
-OUTPUT_DIR = Path("outputs")
-OUTPUT_DIR.mkdir(exist_ok=True)
+# Base storage directories
+BASE_DIR = Path(__file__).parent
+EXTRACTOR_DIR = BASE_DIR / "extractor_json"
+EXTRACTOR_DIR.mkdir(parents=True, exist_ok=True)
+
+OUTPUT_DIR = BASE_DIR / "outputs"
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Gemini client & retry config
 # ---------------------------------------------------------------------------
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-# Verified active models with generous free-tier limits, prioritized by availability & stability
 FALLBACK_MODELS = [
     "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
@@ -93,10 +103,7 @@ def call_gemini_with_retry(client, model: str, uploaded_file, prompt: str):
     Call Gemini with retry + exponential backoff on 503/429 errors.
     Falls back quickly to alternate working models if the primary is experiencing high demand.
     """
-
-    # Build ordered model list: requested model first, then fallbacks
     models_to_try = [model] + [m for m in FALLBACK_MODELS if m != model]
-
     last_error = None
 
     for current_model in models_to_try:
@@ -159,9 +166,15 @@ def call_gemini_with_retry(client, model: str, uploaded_file, prompt: str):
 
 
 # ---------------------------------------------------------------------------
-# Post-Processing & Normalization (Bulletproof Clause Unbundling & Cleaning)
+# String Sanitization & Footnote Cleaning Helpers
 # ---------------------------------------------------------------------------
-import re
+
+
+def sanitize_name(name: str) -> str:
+    """Create a clean folder & file name from Act name."""
+    s = re.sub(r"[^\w\s-]", "", name).strip()
+    s = re.sub(r"[-\s]+", "_", s)
+    return s[:80] or "Act_Document"
 
 
 def clean_identifier(text: str) -> str:
@@ -169,44 +182,82 @@ def clean_identifier(text: str) -> str:
     if not text:
         return ""
     s = str(text).strip()
-    # Strip superscript footnote characters like ¹, ², ³, etc.
     s = re.sub(r"^[¹²³⁴⁵⁶⁷⁸⁹⁰]+", "", s)
-    # Strip surrounding square brackets e.g. '[14A]' -> '14A' or '[3(2)]' -> '3(2)'
     s = re.sub(r"^\[\s*", "", s)
     s = re.sub(r"\s*\]$", "", s)
     s = re.sub(r"^Section\s+", "", s, flags=re.IGNORECASE)
     return s.strip()
 
 
-def clean_description(desc: str) -> str:
-    """Clean editorial footnote superscripts attached to amendment brackets in descriptions."""
+def clean_section_heading(heading: str) -> str:
+    """Clean footnote reference numbers and trailing full stops from section headings."""
+    if not heading:
+        return ""
+    s = str(heading).strip()
+    s = re.sub(r"[¹²³⁴⁵⁶⁷⁸⁹⁰]+", "", s)
+    s = re.sub(r"[\.\s]+$", "", s)
+    s = re.sub(r"([a-zA-Z]+)\d+$", r"\1", s)
+    s = re.sub(r"^\[\s*", "", s)
+    s = re.sub(r"\s*\]$", "", s)
+    return s.strip()
+
+
+def clean_editorial_references(desc: str) -> str:
+    """
+    Remove small editorial footnote reference numbers and superscript digits
+    without corrupting genuine statutory numbers (dates, amounts, section references).
+    """
     if not desc:
         return ""
     s = str(desc)
-    s = re.sub(r"[¹²³⁴⁵⁶⁷⁸⁹⁰]+\s*\[", "[", s)
-    s = re.sub(r"\]\s*[¹²³⁴⁵⁶⁷⁸⁹⁰]+", "]", s)
-    return s.strip()
+    # Strip superscript digits: ¹, ², ³, etc.
+    s = re.sub(r"[¹²³⁴⁵⁶⁷⁸⁹⁰]+", "", s)
+    # Strip footnote reference digits immediately preceding or following brackets: e.g. 1[ -> [, ]2 -> ]
+    s = re.sub(r"(?<=\s)\d+\[", "[", s)
+    s = re.sub(r"^\d+\[", "[", s)
+    s = re.sub(r"\]\d+(?=\s|[,\.;:\)])", "]", s)
+    s = re.sub(r"\]\d+$", "]", s)
+    # Strip footnote digits directly attached to word letters before punctuation:
+    # e.g. 'settlement,3' -> 'settlement,', 'Government4,' -> 'Government,'
+    s = re.sub(r"([a-zA-Z]+)\d+([,\.;:—\)])", r"\1\2", s)
+    s = re.sub(r"([,\.;:—])\d+\b", r"\1", s)
+    # Strip single footnote digit attached directly to an English word before space (e.g. 'Government1 was' -> 'Government was')
+    s = re.sub(r"([a-zA-Z]{3,})\d(\s+)", r"\1\2", s)
+    # Strip stray bottom-of-page footnote lines if any leaked
+    lines = [
+        line
+        for line in s.split("\n")
+        if not re.match(
+            r"^\s*\d+\s*[\.\)]\s*(?:Subs|Added|Omitted|Repealed|Ins|See|Words)\b",
+            line,
+            re.IGNORECASE,
+        )
+    ]
+    return "\n".join(lines).strip()
 
 
 def normalize_provision_object(obj: dict) -> list:
     """
-    Unbundle ordinary lettered clauses (a), (b), (c)... if the model accidentally
-    merged them into a single parent description.
-    LEAVES internal sub-clauses of Provisos and Explanations intact inside their description!
+    1. Strips editorial footnote reference numbers and cleans section names/identifiers.
+    2. Preserves quoted amendment blocks in double quotes (namely:—\n"(a)...").
+    3. Preserves internal clauses of Provisos and Explanations.
+    4. Unbundles ordinary lettered clauses (a), (b), (c)... into separate JSON objects.
     """
     desc = obj.get("description", "")
     sub_no = clean_identifier(obj.get("sub_section_no", ""))
     sec_no = clean_identifier(obj.get("section_no", ""))
+    sec_name = clean_section_heading(obj.get("section_name", ""))
 
     obj["section_no"] = sec_no
+    obj["section_name"] = sec_name
     obj["sub_section_no"] = sub_no
-    obj["description"] = clean_description(desc)
+    obj["description"] = clean_editorial_references(desc)
 
-    # If the description starts with a proviso or explanation, DO NOT SPLIT internal clauses!
+    # CASE A: If the description starts with a proviso or explanation, DO NOT SPLIT internal clauses!
     if re.match(r"^\s*(?:\[\s*)?(?:Provided|Explanation)\b", obj["description"], re.IGNORECASE):
         return [obj]
 
-    # If the description contains a quoted amendment block (e.g. namely:—\n"(a)..."), DO NOT SPLIT!
+    # CASE B: If the description contains a quoted amendment block (e.g. namely:—\n"(a)..."), DO NOT SPLIT!
     # Quoted clauses in double quotes belong to the amended Act and must stay merged in one description.
     if (
         re.search(r"namely\s*[:—\-]*\s*[\"“\']", obj["description"], re.IGNORECASE)
@@ -252,7 +303,6 @@ def normalize_provision_object(obj: dict) -> list:
     if current_clause_id is not None:
         clauses.append((current_clause_id, "\n".join(current_clause_text)))
 
-    # If no clauses or fewer than 2 clauses found, keep as-is (except split trailing proviso per sequence rule)
     if not has_clauses or len(clauses) < 2:
         if prov_part:
             obj1 = dict(obj)
@@ -311,6 +361,8 @@ def post_process_extracted_data(data: list) -> list:
                 val = obj.get(k, "")
                 clean_obj[k] = str(val) if val is not None else ""
             clean_obj["section_no"] = clean_identifier(clean_obj["section_no"])
+            clean_obj["section_name"] = clean_section_heading(clean_obj["section_name"])
+            clean_obj["description"] = clean_editorial_references(clean_obj["description"])
             cleaned_list.append(clean_obj)
         else:
             cleaned_list.append(obj)
@@ -326,16 +378,115 @@ def post_process_extracted_data(data: list) -> list:
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
     """Serve the main UI page."""
-    html_path = Path(__file__).parent / "static" / "index.html"
+    html_path = BASE_DIR / "static" / "index.html"
     return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
 
 
+@app.post("/api/download-act")
+async def download_act(
+    act_url: str = Form(""),
+    act_name: str = Form(""),
+):
+    """
+    Download an Act PDF from URL directly via Python (no API needed).
+    Stores it in extractor_json/<Act_Name>/<Act_Name>.pdf
+    """
+    url = act_url.strip()
+    if not url:
+        raise HTTPException(
+            status_code=400,
+            detail="abbe pdf link de na , gandmasti mat kar",
+        )
+
+    if not (url.startswith("http://") or url.startswith("https://")):
+        raise HTTPException(
+            status_code=400,
+            detail="Valid http:// ya https:// wala PDF link chahiye!",
+        )
+
+    # Determine Act name
+    raw_name = act_name.strip()
+    if not raw_name:
+        parsed = urllib.parse.urlparse(url)
+        base = os.path.basename(parsed.path)
+        raw_name = os.path.splitext(base)[0] or "Act_Document"
+
+    safe_name = sanitize_name(raw_name)
+    act_folder = EXTRACTOR_DIR / safe_name
+    act_folder.mkdir(parents=True, exist_ok=True)
+    pdf_path = act_folder / f"{safe_name}.pdf"
+
+    # Download PDF via httpx directly
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+    }
+
+    try:
+        async with httpx.AsyncClient(follow_redirects=True, timeout=90.0, headers=headers) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"PDF download fail ho gaya! Server status code: {resp.status_code}.",
+                )
+            content = resp.content
+            if len(content) < 100:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Downloaded file bohot chhoti ya corrupt hai.",
+                )
+
+            with open(pdf_path, "wb") as f:
+                f.write(content)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"PDF download error: {str(e)}",
+        )
+
+    # Inspect page count
+    try:
+        reader = PdfReader(pdf_path)
+        total_pages = len(reader.pages)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Downloaded file valid PDF nahi hai: {str(e)}",
+        )
+
+    # Create/update meta.json
+    meta = {
+        "act_name": raw_name,
+        "folder_name": safe_name,
+        "source_url": url,
+        "total_pages": total_pages,
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "status": "downloaded",
+        "has_json": False,
+    }
+    with open(act_folder / "meta.json", "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2)
+
+    return JSONResponse(
+        content={
+            "success": True,
+            "act_name": raw_name,
+            "folder_name": safe_name,
+            "total_pages": total_pages,
+            "pdf_url": f"/api/pdf/{safe_name}",
+            "exceeds_threshold": total_pages > 15,
+        }
+    )
+
+
 @app.post("/api/inspect")
-async def inspect_pdf(file: UploadFile = File(...)):
-    """
-    Instantly inspect PDF metadata (page count) upon selection.
-    Threshold: 15 pages.
-    """
+async def inspect_uploaded_pdf(file: UploadFile = File(...)):
+    """Inspect manually uploaded PDF metadata."""
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=400,
@@ -368,8 +519,10 @@ async def inspect_pdf(file: UploadFile = File(...)):
 
 @app.post("/api/extract")
 async def extract_pdf(
-    file: UploadFile = File(...),
-    api_key: str = Form(default=""),  # BYOK (Bring Your Own Key)
+    file: UploadFile = File(None),
+    folder_name: str = Form(default=""),
+    act_name: str = Form(default=""),
+    api_key: str = Form(default=""),
     mode: str = Form(default="full"),  # 'full', 'page_range', or 'section_range'
     start_page: int = Form(default=1),
     end_page: int = Form(default=0),
@@ -377,32 +530,61 @@ async def extract_pdf(
     model: str = Form(default="gemini-3.5-flash"),
 ):
     """
-    Upload a legal Act PDF and extract structured JSON.
-
-    - **file**: PDF file to process
-    - **api_key**: User's Gemini API key (BYOK)
-    - **mode**: 'full' | 'page_range' | 'section_range'
-    - **start_page**: Starting page number (1-indexed) if mode is page_range
-    - **end_page**: Ending page number (inclusive) if mode is page_range
-    - **section_range**: Optional section range (e.g., "1-30")
-    - **model**: Gemini model to use
+    Extract statutory content from either:
+    1. A previously downloaded Act in extractor_json/<folder_name>/
+    2. A newly uploaded file
     """
-    if not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file format. Only PDF files are allowed.",
-        )
-
-    contents = await file.read()
-    if len(contents) == 0:
-        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-
     tmp_path = None
     sliced_path = None
 
     try:
+        # Determine PDF source
+        pdf_source_path = None
+        current_act_name = act_name.strip()
+        safe_folder = folder_name.strip()
+
+        if safe_folder:
+            act_folder = EXTRACTOR_DIR / safe_folder
+            pdf_candidate = act_folder / f"{safe_folder}.pdf"
+            if pdf_candidate.exists():
+                pdf_source_path = pdf_candidate
+                if not current_act_name:
+                    meta_path = act_folder / "meta.json"
+                    if meta_path.exists():
+                        try:
+                            with open(meta_path, "r", encoding="utf-8") as f:
+                                current_act_name = json.load(f).get("act_name", safe_folder)
+                        except Exception:
+                            pass
+            else:
+                # Find any pdf in that folder
+                pdf_list = list(act_folder.glob("*.pdf"))
+                if pdf_list:
+                    pdf_source_path = pdf_list[0]
+
+        if not pdf_source_path and file:
+            # Handle uploaded file
+            contents = await file.read()
+            if len(contents) == 0:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+            raw_name = current_act_name or Path(file.filename).stem
+            safe_folder = sanitize_name(raw_name)
+            act_folder = EXTRACTOR_DIR / safe_folder
+            act_folder.mkdir(parents=True, exist_ok=True)
+            pdf_source_path = act_folder / f"{safe_folder}.pdf"
+            with open(pdf_source_path, "wb") as f:
+                f.write(contents)
+            current_act_name = raw_name
+
+        if not pdf_source_path or not os.path.exists(pdf_source_path):
+            raise HTTPException(
+                status_code=400,
+                detail="PDF source nahi mila. Pehle PDF link do ya file upload karo!",
+            )
+
         # Read PDF to get actual page count
-        reader = PdfReader(io.BytesIO(contents))
+        reader = PdfReader(pdf_source_path)
         total_pages = len(reader.pages)
 
         # Handle page range slicing if requested
@@ -414,7 +596,7 @@ async def extract_pdf(
             actual_start = max(1, min(start_page, actual_end))
 
             logger.info(
-                f"Slicing PDF '{file.filename}' from page {actual_start} to {actual_end} (total: {total_pages})"
+                f"Slicing PDF '{safe_folder}' from page {actual_start} to {actual_end} (total: {total_pages})"
             )
 
             writer = PdfWriter()
@@ -430,13 +612,7 @@ async def extract_pdf(
             file_to_upload = sliced_path
             page_info = f"{actual_start} to {actual_end} (out of {total_pages} total pages)"
         else:
-            # Full PDF
-            with tempfile.NamedTemporaryFile(
-                delete=False, suffix=".pdf", prefix="act_"
-            ) as tmp:
-                tmp.write(contents)
-                tmp_path = tmp.name
-            file_to_upload = tmp_path
+            file_to_upload = str(pdf_source_path)
 
         # Build extraction prompt
         range_text = section_range.strip() if section_range else None
@@ -507,22 +683,12 @@ async def extract_pdf(
                         detail=f"Item {i} is missing required keys: {missing}",
                     )
 
-            # Save output file with descriptive name
-            safe_name = (
-                Path(file.filename).stem.replace(" ", "_") if file.filename else "output"
-            )
-            output_id = str(uuid.uuid4())[:8]
+            # Save in extractor_json/<folder_name>/<folder_name>.json
+            target_folder = EXTRACTOR_DIR / safe_folder
+            target_folder.mkdir(parents=True, exist_ok=True)
+            output_json_path = target_folder / f"{safe_folder}.json"
 
-            if mode == "page_range":
-                output_filename = f"{safe_name}_pages_{start_page}-{end_page}_{output_id}.json"
-            elif range_text:
-                output_filename = f"{safe_name}_sec_{range_text}_{output_id}.json"
-            else:
-                output_filename = f"{safe_name}_{output_id}.json"
-
-            output_path = OUTPUT_DIR / output_filename
-
-            with open(output_path, "w", encoding="utf-8") as f:
+            with open(output_json_path, "w", encoding="utf-8") as f:
                 json.dump(extracted_data, f, ensure_ascii=False, indent=2)
 
             # Build section summary
@@ -530,17 +696,45 @@ async def extract_pdf(
                 set(obj.get("section_no", "") for obj in extracted_data if obj.get("section_no"))
             )
 
+            # Update meta.json
+            meta_path = target_folder / "meta.json"
+            meta = {}
+            if meta_path.exists():
+                try:
+                    with open(meta_path, "r", encoding="utf-8") as f:
+                        meta = json.load(f)
+                except Exception:
+                    pass
+
+            meta.update({
+                "act_name": current_act_name or safe_folder,
+                "folder_name": safe_folder,
+                "total_pages": total_pages,
+                "total_sections": len(sections),
+                "total_provisions": len(extracted_data),
+                "sections_found": sections,
+                "model_used": used_model,
+                "pages_processed": page_info if page_info else f"1 to {total_pages}",
+                "completed_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "has_json": True,
+            })
+            with open(meta_path, "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=2)
+
             return JSONResponse(
                 content={
                     "success": True,
-                    "filename": output_filename,
+                    "act_name": current_act_name or safe_folder,
+                    "folder_name": safe_folder,
+                    "filename": f"{safe_folder}.json",
                     "model_used": used_model,
                     "total_pages": total_pages,
                     "pages_processed": page_info if page_info else f"1 to {total_pages}",
                     "total_objects": len(extracted_data),
                     "sections_found": sections,
                     "total_sections": len(sections),
-                    "download_url": f"/api/download/{output_filename}",
+                    "download_url": f"/api/download/{safe_folder}",
+                    "pdf_url": f"/api/pdf/{safe_folder}",
                     "data": extracted_data,
                 }
             )
@@ -560,7 +754,7 @@ async def extract_pdf(
             detail=f"Error processing PDF: {str(e)}",
         )
     finally:
-        # Clean up temporary local files
+        # Clean up temporary sliced files
         for p in [tmp_path, sliced_path]:
             if p and os.path.exists(p):
                 try:
@@ -569,17 +763,163 @@ async def extract_pdf(
                     pass
 
 
-@app.get("/api/download/{filename}")
-async def download_json(filename: str):
-    """Download a generated JSON file."""
-    filepath = OUTPUT_DIR / filename
-    if not filepath.exists():
-        raise HTTPException(status_code=404, detail="File not found.")
+@app.get("/api/pdf/{folder_name}")
+async def serve_pdf(folder_name: str):
+    """Serve PDF file inline for preview and Bherifai split-screen."""
+    target_folder = EXTRACTOR_DIR / folder_name
+    pdf_path = target_folder / f"{folder_name}.pdf"
+    if not pdf_path.exists():
+        # Fallback to any pdf in that folder
+        candidates = list(target_folder.glob("*.pdf"))
+        if candidates:
+            pdf_path = candidates[0]
+        else:
+            raise HTTPException(status_code=404, detail="PDF file not found.")
+
     return FileResponse(
-        path=str(filepath),
-        filename=filename,
+        path=str(pdf_path),
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline"},
+    )
+
+
+@app.get("/api/download/{folder_name}")
+async def download_json(folder_name: str):
+    """Download generated JSON file."""
+    target_folder = EXTRACTOR_DIR / folder_name
+    json_path = target_folder / f"{folder_name}.json"
+    if not json_path.exists():
+        raise HTTPException(status_code=404, detail="JSON file not found.")
+
+    return FileResponse(
+        path=str(json_path),
+        filename=f"{folder_name}.json",
         media_type="application/json",
     )
+
+
+@app.get("/api/history")
+async def get_history():
+    """List all extracted and downloaded Acts in extractor_json/."""
+    items = []
+    if not EXTRACTOR_DIR.exists():
+        return JSONResponse(content={"items": []})
+
+    for folder in sorted(EXTRACTOR_DIR.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True):
+        if not folder.is_dir():
+            continue
+
+        meta_file = folder / "meta.json"
+        meta = {}
+        if meta_file.exists():
+            try:
+                with open(meta_file, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+            except Exception:
+                pass
+
+        json_file = folder / f"{folder.name}.json"
+        pdf_file = folder / f"{folder.name}.pdf"
+        has_json = json_file.exists() or any(folder.glob("*.json"))
+        has_pdf = pdf_file.exists() or any(folder.glob("*.pdf"))
+
+        items.append({
+            "folder_name": folder.name,
+            "act_name": meta.get("act_name", folder.name.replace("_", " ")),
+            "created_at": meta.get("completed_at") or meta.get("created_at") or time.strftime("%Y-%m-%d %H:%M"),
+            "total_pages": meta.get("total_pages", 0),
+            "total_sections": meta.get("total_sections", 0),
+            "total_provisions": meta.get("total_provisions", 0),
+            "has_json": has_json,
+            "has_pdf": has_pdf,
+            "download_url": f"/api/download/{folder.name}" if has_json else None,
+            "pdf_url": f"/api/pdf/{folder.name}" if has_pdf else None,
+        })
+
+    return JSONResponse(content={"items": items})
+
+
+@app.get("/api/history/{folder_name}")
+async def get_single_history(folder_name: str):
+    """Get full data of a single Act from history."""
+    folder = EXTRACTOR_DIR / folder_name
+    if not folder.exists():
+        raise HTTPException(status_code=404, detail="Act folder not found.")
+
+    meta_file = folder / "meta.json"
+    meta = {}
+    if meta_file.exists():
+        try:
+            with open(meta_file, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            pass
+
+    json_path = folder / f"{folder_name}.json"
+    data = []
+    if json_path.exists():
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except Exception:
+            pass
+
+    return JSONResponse(
+        content={
+            "meta": meta,
+            "folder_name": folder_name,
+            "act_name": meta.get("act_name", folder_name),
+            "pdf_url": f"/api/pdf/{folder_name}",
+            "download_url": f"/api/download/{folder_name}",
+            "data": data,
+        }
+    )
+
+
+@app.delete("/api/history/{folder_name}")
+async def delete_history_item(folder_name: str):
+    """Delete a single Act folder from extractor_json/."""
+    folder = EXTRACTOR_DIR / folder_name
+    if not folder.exists():
+        raise HTTPException(status_code=404, detail="Folder not found.")
+
+    try:
+        shutil.rmtree(folder)
+        return JSONResponse(content={"success": True, "deleted": folder_name})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Delete error: {str(e)}")
+
+
+@app.post("/api/history/delete-selected")
+async def delete_selected_history(payload: dict):
+    """Delete multiple selected folders from extractor_json/."""
+    folders = payload.get("folder_names", [])
+    deleted = []
+    for f_name in folders:
+        folder = EXTRACTOR_DIR / f_name
+        if folder.exists() and folder.is_dir():
+            try:
+                shutil.rmtree(folder)
+                deleted.append(f_name)
+            except Exception:
+                pass
+    return JSONResponse(content={"success": True, "deleted": deleted})
+
+
+@app.post("/api/history/clear-all")
+async def clear_all_history():
+    """Clear all saved Acts in extractor_json/."""
+    try:
+        count = 0
+        for item in EXTRACTOR_DIR.iterdir():
+            if item.is_dir():
+                shutil.rmtree(item)
+                count += 1
+            else:
+                item.unlink()
+        return JSONResponse(content={"success": True, "cleared_count": count})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Clear error: {str(e)}")
 
 
 # ---------------------------------------------------------------------------
