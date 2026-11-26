@@ -652,7 +652,7 @@
                             <option value="gemini-3.7-flash">Gemini 3.7 Flash</option>
                             <option value="gemini-3.8-flash">Gemini 3.8 Flash</option>
                         </select>
-                        <small>Zero-downtime auto-fallback across verified models</small>
+                        <small>gemini 3.5 flash tested hai , apna kida baju me rakho</small>
                     </div>
 
                     <!-- BYOK: Bring Your Own Key (Mandatory) -->
@@ -665,15 +665,15 @@
                                 <span id="toggleKeyText">Show</span>
                             </button>
                         </div>
-                        <input type="password" id="apiKeyInput" placeholder="Paste your API key (AIzaSy...)" style="background:white; font-family:monospace; font-size:0.85rem;">
+                        <input type="password" id="apiKeyInput" placeholder="api key de pehele" style="background:white; font-family:monospace; font-size:0.85rem;">
                         <small style="color:var(--text-muted); font-size:0.75rem; margin-top:0.35rem; display:block; line-height:1.4;">
-                            Get a free key in 30 sec at <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary); font-weight:700; text-decoration:underline;">Google AI Studio</a>. Saved securely in your browser only.
+                            ham garibo ke liye yaha api key milegi free me 👉 <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary); font-weight:700; text-decoration:underline;">Google AI Studio</a>
                         </small>
                     </div>
 
                     <!-- Extract Button -->
                     <button class="btn btn-primary" id="extractBtn" disabled onclick="startExtraction()">
-                        🚀 Extract to Quick Clause JSON
+                        🚀 LOQ phek ke maro
                     </button>
 
                     <!-- Real Multi-Stage Progress Card -->
@@ -944,7 +944,7 @@
         if (!userApiKey) {
             apiKeyInput.style.borderColor = 'var(--danger)';
             apiKeyInput.focus();
-            showToast('🔑 Please enter your Gemini API Key to proceed!');
+            showToast('🔑 api key de pehele!');
             return;
         }
 
