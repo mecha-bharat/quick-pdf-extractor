@@ -73,16 +73,14 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 FALLBACK_MODELS = [
-    "gemini-3.5-flash",
     "gemini-3.5-flash-lite",
-    "gemini-3.1-flash-lite",
-    "gemini-3-flash-preview",
-    "gemini-3.7-flash",
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash",
     "gemini-3.8-flash",
 ]
 
 MAX_RETRIES_PER_MODEL = 2
-INITIAL_BACKOFF_SECONDS = 1.5
+INITIAL_BACKOFF_SECONDS = 1.2
 
 
 def get_gemini_client(user_api_key: str = None):
@@ -98,10 +96,11 @@ def get_gemini_client(user_api_key: str = None):
     return genai.Client(api_key=key)
 
 
-def call_gemini_with_retry(client, model: str, uploaded_file, prompt: str):
+def call_gemini_with_retry(client, model: str, content_item, prompt: str):
     """
     Call Gemini with retry + exponential backoff on 503/429 errors.
     Falls back quickly to alternate working models if the primary is experiencing high demand.
+    Accepts inline content Part (ultra-fast, zero upload latency) or uploaded file.
     """
     models_to_try = [model] + [m for m in FALLBACK_MODELS if m != model]
     last_error = None
@@ -115,7 +114,7 @@ def call_gemini_with_retry(client, model: str, uploaded_file, prompt: str):
 
                 response = client.models.generate_content(
                     model=current_model,
-                    contents=[uploaded_file, prompt],
+                    contents=[content_item, prompt],
                     config=types.GenerateContentConfig(
                         response_mime_type="application/json",
                         temperature=0.0,
@@ -163,6 +162,37 @@ def call_gemini_with_retry(client, model: str, uploaded_file, prompt: str):
             f"Please wait a few minutes and try again."
         ),
     )
+
+
+def extract_single_chunk(client, model: str, pdf_bytes: bytes, page_info: str = None, section_range: str = None) -> tuple:
+    """
+    Synchronously extracts statutory content from a slice of PDF bytes using inline Part.
+    Returns (list_of_parsed_dicts, used_model_name).
+    """
+    prompt = get_extraction_prompt(section_range=section_range, page_info=page_info)
+    content_part = types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")
+
+    raw_json_text, used_model = call_gemini_with_retry(client, model, content_part, prompt)
+
+    cleaned = raw_json_text.strip()
+    if cleaned.startswith("```"):
+        lines = cleaned.split("\n")
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        cleaned = "\n".join(lines)
+
+    try:
+        data = json.loads(cleaned)
+        if isinstance(data, list):
+            return data, used_model
+        elif isinstance(data, dict):
+            return [data], used_model
+        return [], used_model
+    except Exception as e:
+        logger.error(f"Failed to parse JSON for chunk {page_info}: {e}")
+        return [], used_model
 
 
 # ---------------------------------------------------------------------------
@@ -757,16 +787,14 @@ async def extract_pdf(
     start_page: int = Form(default=1),
     end_page: int = Form(default=0),
     section_range: str = Form(default=""),
-    model: str = Form(default="gemini-3.5-flash"),
+    model: str = Form(default="gemini-3.5-flash-lite"),
 ):
     """
     Extract statutory content from either:
     1. A previously downloaded Act in extractor_json/<folder_name>/
     2. A newly uploaded file
+    Uses ultra-fast inline PDF processing and parallel chunking for multi-page documents.
     """
-    tmp_path = None
-    sliced_path = None
-
     try:
         # Determine PDF source
         pdf_source_path = None
@@ -817,164 +845,164 @@ async def extract_pdf(
         reader = PdfReader(pdf_source_path)
         total_pages = len(reader.pages)
 
-        # Handle page range slicing if requested
-        file_to_upload = None
-        page_info = None
-
+        # Determine page boundaries
         if mode == "page_range" and start_page >= 1:
             actual_end = min(end_page if end_page > 0 else total_pages, total_pages)
             actual_start = max(1, min(start_page, actual_end))
-
-            logger.info(
-                f"Slicing PDF '{safe_folder}' from page {actual_start} to {actual_end} (total: {total_pages})"
-            )
-
-            writer = PdfWriter()
-            for p_num in range(actual_start - 1, actual_end):
-                writer.add_page(reader.pages[p_num])
-
-            with tempfile.NamedTemporaryFile(
-                delete=False, suffix=".pdf", prefix=f"act_p{actual_start}_p{actual_end}_"
-            ) as tmp_slice:
-                writer.write(tmp_slice)
-                sliced_path = tmp_slice.name
-
-            file_to_upload = sliced_path
-            page_info = f"{actual_start} to {actual_end} (out of {total_pages} total pages)"
         else:
-            file_to_upload = str(pdf_source_path)
+            actual_start = 1
+            actual_end = total_pages
 
-        # Build extraction prompt
+        total_pages_to_process = actual_end - actual_start + 1
+        page_info = f"{actual_start} to {actual_end} (out of {total_pages} total pages)" if total_pages_to_process < total_pages else f"1 to {total_pages}"
         range_text = section_range.strip() if section_range else None
-        prompt = get_extraction_prompt(section_range=range_text, page_info=page_info)
 
         # Initialize Gemini client with user's key (BYOK)
         client = get_gemini_client(user_api_key=api_key)
+        loop = asyncio.get_event_loop()
+        used_model = model
 
-        upload_size = os.path.getsize(file_to_upload)
-        logger.info(f"Uploading PDF ({upload_size} bytes) to Gemini Files API...")
-        uploaded_file = client.files.upload(file=file_to_upload)
-        logger.info(f"PDF uploaded as: {uploaded_file.name}")
+        # ACCELERATION: Multi-chunk parallel extraction for large documents (> 8 pages)
+        CHUNK_SIZE = 8
+        if total_pages_to_process > CHUNK_SIZE:
+            logger.info(
+                f"⚡ Multi-chunk acceleration: extracting {total_pages_to_process} pages (p{actual_start}-p{actual_end}) "
+                f"in parallel batches of {CHUNK_SIZE}..."
+            )
+            chunks = []
+            cur = actual_start
+            while cur <= actual_end:
+                c_end = min(cur + CHUNK_SIZE - 1, actual_end)
+                chunks.append((cur, c_end))
+                cur = c_end + 1
 
-        try:
-            # Call Gemini with retry + fallback
-            raw_json_text, used_model = call_gemini_with_retry(
-                client, model, uploaded_file, prompt
+            sem = asyncio.Semaphore(3)  # max 3 concurrent chunks to respect rate limits
+
+            async def run_chunk_with_sem(c_start, c_end):
+                async with sem:
+                    writer = PdfWriter()
+                    for p_num in range(c_start - 1, c_end):
+                        writer.add_page(reader.pages[p_num])
+                    buf = io.BytesIO()
+                    writer.write(buf)
+                    pdf_bytes = buf.getvalue()
+                    p_info = f"{c_start} to {c_end} (out of {total_pages} total pages)"
+                    logger.info(f"🚀 Running chunk {p_info}...")
+                    chunk_data, m_used = await loop.run_in_executor(
+                        None,
+                        lambda: extract_single_chunk(client, model, pdf_bytes, page_info=p_info, section_range=range_text)
+                    )
+                    return chunk_data, m_used
+
+            tasks = [run_chunk_with_sem(cs, ce) for cs, ce in chunks]
+            chunk_results = await asyncio.gather(*tasks)
+
+            raw_combined = []
+            for cr, m_used in chunk_results:
+                raw_combined.extend(cr)
+                used_model = m_used
+            extracted_data = raw_combined
+        else:
+            # Single chunk (<= 8 pages) — instant in-memory extraction
+            writer = PdfWriter()
+            for p_num in range(actual_start - 1, actual_end):
+                writer.add_page(reader.pages[p_num])
+            buf = io.BytesIO()
+            writer.write(buf)
+            pdf_bytes = buf.getvalue()
+            p_info = page_info if total_pages_to_process < total_pages else None
+            extracted_data, used_model = await loop.run_in_executor(
+                None,
+                lambda: extract_single_chunk(client, model, pdf_bytes, page_info=p_info, section_range=range_text)
             )
 
-            # Clean up potential markdown fences
-            cleaned = raw_json_text.strip()
-            if cleaned.startswith("```"):
-                lines = cleaned.split("\n")
-                if lines[0].startswith("```"):
-                    lines = lines[1:]
-                if lines and lines[-1].strip() == "```":
-                    lines = lines[:-1]
-                cleaned = "\n".join(lines)
+        # Apply bulletproof clause unbundling, identifier cleaning & normalization
+        extracted_data = post_process_extracted_data(extracted_data)
 
-            # Validate JSON
-            try:
-                extracted_data = json.loads(cleaned)
-            except json.JSONDecodeError as e:
+        # Validate structure — must be a list
+        if not isinstance(extracted_data, list):
+            raise HTTPException(
+                status_code=500,
+                detail="Gemini returned JSON but it is not an array. Expected a JSON array of objects.",
+            )
+
+        # Validate each object has the required 6 keys
+        required_keys = {
+            "chapter_no",
+            "chapter_name",
+            "section_no",
+            "section_name",
+            "sub_section_no",
+            "description",
+        }
+        for i, obj in enumerate(extracted_data):
+            if not isinstance(obj, dict):
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Gemini returned invalid JSON: {str(e)}. Raw response length: {len(raw_json_text)} chars.",
+                    detail=f"Item {i} in the JSON array is not an object.",
                 )
-
-            # Apply bulletproof clause unbundling, identifier cleaning & normalization
-            extracted_data = post_process_extracted_data(extracted_data)
-
-            # Validate structure — must be a list
-            if not isinstance(extracted_data, list):
+            missing = required_keys - set(obj.keys())
+            if missing:
                 raise HTTPException(
                     status_code=500,
-                    detail="Gemini returned JSON but it is not an array. Expected a JSON array of objects.",
+                    detail=f"Item {i} is missing required keys: {missing}",
                 )
 
-            # Validate each object has the required 6 keys
-            required_keys = {
-                "chapter_no",
-                "chapter_name",
-                "section_no",
-                "section_name",
-                "sub_section_no",
-                "description",
-            }
-            for i, obj in enumerate(extracted_data):
-                if not isinstance(obj, dict):
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"Item {i} in the JSON array is not an object.",
-                    )
-                missing = required_keys - set(obj.keys())
-                if missing:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"Item {i} is missing required keys: {missing}",
-                    )
+        # Save in extractor_json/<folder_name>/<folder_name>.json
+        target_folder = EXTRACTOR_DIR / safe_folder
+        target_folder.mkdir(parents=True, exist_ok=True)
+        output_json_path = target_folder / f"{safe_folder}.json"
 
-            # Save in extractor_json/<folder_name>/<folder_name>.json
-            target_folder = EXTRACTOR_DIR / safe_folder
-            target_folder.mkdir(parents=True, exist_ok=True)
-            output_json_path = target_folder / f"{safe_folder}.json"
+        with open(output_json_path, "w", encoding="utf-8") as f:
+            json.dump(extracted_data, f, ensure_ascii=False, indent=2)
 
-            with open(output_json_path, "w", encoding="utf-8") as f:
-                json.dump(extracted_data, f, ensure_ascii=False, indent=2)
+        # Build section summary
+        sections = sorted(
+            set(obj.get("section_no", "") for obj in extracted_data if obj.get("section_no"))
+        )
 
-            # Build section summary
-            sections = sorted(
-                set(obj.get("section_no", "") for obj in extracted_data if obj.get("section_no"))
-            )
-
-            # Update meta.json
-            meta_path = target_folder / "meta.json"
-            meta = {}
-            if meta_path.exists():
-                try:
-                    with open(meta_path, "r", encoding="utf-8") as f:
-                        meta = json.load(f)
-                except Exception:
-                    pass
-
-            meta.update({
-                "act_name": current_act_name or safe_folder,
-                "folder_name": safe_folder,
-                "total_pages": total_pages,
-                "total_sections": len(sections),
-                "total_provisions": len(extracted_data),
-                "sections_found": sections,
-                "model_used": used_model,
-                "pages_processed": page_info if page_info else f"1 to {total_pages}",
-                "completed_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "has_json": True,
-            })
-            with open(meta_path, "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
-
-            return JSONResponse(
-                content={
-                    "success": True,
-                    "act_name": current_act_name or safe_folder,
-                    "folder_name": safe_folder,
-                    "filename": f"{safe_folder}.json",
-                    "model_used": used_model,
-                    "total_pages": total_pages,
-                    "pages_processed": page_info if page_info else f"1 to {total_pages}",
-                    "total_objects": len(extracted_data),
-                    "sections_found": sections,
-                    "total_sections": len(sections),
-                    "download_url": f"/api/download/{safe_folder}",
-                    "pdf_url": f"/api/pdf/{safe_folder}",
-                    "data": extracted_data,
-                }
-            )
-
-        finally:
-            # Clean up remote file from Gemini servers
+        # Update meta.json
+        meta_path = target_folder / "meta.json"
+        meta = {}
+        if meta_path.exists():
             try:
-                client.files.delete(name=uploaded_file.name)
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
             except Exception:
                 pass
+
+        meta.update({
+            "act_name": current_act_name or safe_folder,
+            "folder_name": safe_folder,
+            "total_pages": total_pages,
+            "total_sections": len(sections),
+            "total_provisions": len(extracted_data),
+            "sections_found": sections,
+            "model_used": used_model,
+            "pages_processed": page_info,
+            "completed_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "has_json": True,
+        })
+        with open(meta_path, "w", encoding="utf-8") as f:
+            json.dump(meta, f, indent=2)
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "act_name": current_act_name or safe_folder,
+                "folder_name": safe_folder,
+                "filename": f"{safe_folder}.json",
+                "model_used": used_model,
+                "total_pages": total_pages,
+                "pages_processed": page_info,
+                "total_objects": len(extracted_data),
+                "sections_found": sections,
+                "total_sections": len(sections),
+                "download_url": f"/api/download/{safe_folder}",
+                "pdf_url": f"/api/pdf/{safe_folder}",
+                "data": extracted_data,
+            }
+        )
 
     except HTTPException:
         raise
