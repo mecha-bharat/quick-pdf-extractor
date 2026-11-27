@@ -489,16 +489,84 @@ def normalize_provision_object(obj: dict) -> list:
     return results
 
 
+def is_preamble_or_recital(obj: dict) -> bool:
+    """
+    Return True if the object represents a Preamble, Long Title, Enacting Formula,
+    or unnumbered introductory recital that should be excluded from statutory sections.
+    """
+    if not isinstance(obj, dict):
+        return False
+
+    sec_name = str(obj.get("section_name", "")).strip()
+    sec_name_lower = sec_name.lower()
+    sec_no = str(obj.get("section_no", "")).strip().lower()
+    sub_no = str(obj.get("sub_section_no", "")).strip()
+    desc = str(obj.get("description", "")).strip()
+    desc_lower = desc.lower()
+
+    # 1. Direct label check in section_name or section_no
+    if sec_name_lower in ["preamble", "preamble.", "preamble :", "preamble:", "long title", "enacting formula", "enacting formula:"]:
+        return True
+    if re.search(r"^\s*preamble\b", sec_name_lower):
+        return True
+    if sec_no in ["preamble", "long title"]:
+        return True
+
+    # 2. Check if description is an unnumbered preamble recital or enacting formula
+    is_recital_start = bool(
+        re.match(
+            r"^\s*(?:WHEREAS\b|Now,\s*THEREFORE\b|An Act to\b|BE it enacted by\b)",
+            desc,
+            re.IGNORECASE,
+        )
+    )
+
+    if is_recital_start:
+        # If section name is preamble-like, empty, or generic
+        if sec_name_lower in ["", "preamble", "long title", "enacting formula", "ordinance"] or "preamble" in sec_name_lower:
+            return True
+        # If section_no is "1" or "" and description has recital formula without statutory subsections
+        if sec_no in ["", "1"] and not sub_no:
+            # Check if this is preamble text rather than Section 1 statutory text
+            if (
+                "whereas parliament" in desc_lower
+                or "whereas it is expedient" in desc_lower
+                or "president is pleased to promulgate" in desc_lower
+                or "governor is pleased to promulgate" in desc_lower
+                or "be it enacted by parliament" in desc_lower
+                or "powers conferred by clause (1) of article 123" in desc_lower
+            ):
+                return True
+
+    # 3. Check for historical regulation preambles (e.g. Bengal Patni Taluks 1819)
+    if "preamble" in sec_name_lower:
+        return True
+    if sec_no in ["", "1"] and not sub_no:
+        if (
+            "the following rules have accordingly been enacted" in desc_lower
+            or "the following regulation has been enacted" in desc_lower
+            or "the following provisions have accordingly been enacted" in desc_lower
+        ) and "short title" not in sec_name_lower and "definition" not in sec_name_lower:
+            return True
+
+    return False
+
+
 def post_process_extracted_data(data: list) -> list:
-    """Apply safety normalization, clause unbundling, and identifier cleanup across all objects."""
+    """Apply safety normalization, clause unbundling, identifier cleanup, and preamble exclusion across all objects."""
     if not isinstance(data, list):
         return data
 
     processed = []
     for item in data:
         if isinstance(item, dict):
+            # Filter out preambles and introductory recitals
+            if is_preamble_or_recital(item):
+                continue
             unbundled = normalize_provision_object(item)
-            processed.extend(unbundled)
+            for u in unbundled:
+                if not is_preamble_or_recital(u):
+                    processed.append(u)
         else:
             processed.append(item)
 
@@ -506,6 +574,8 @@ def post_process_extracted_data(data: list) -> list:
     required_keys = ["chapter_no", "chapter_name", "section_no", "section_name", "sub_section_no", "description"]
     for obj in processed:
         if isinstance(obj, dict):
+            if is_preamble_or_recital(obj):
+                continue
             clean_obj = {}
             for k in required_keys:
                 val = obj.get(k, "")
@@ -522,7 +592,8 @@ def post_process_extracted_data(data: list) -> list:
             )
             clean_obj["description"] = clean_desc
             clean_obj["sub_section_no"] = clean_sub
-            cleaned_list.append(clean_obj)
+            if not is_preamble_or_recital(clean_obj):
+                cleaned_list.append(clean_obj)
         else:
             cleaned_list.append(obj)
 

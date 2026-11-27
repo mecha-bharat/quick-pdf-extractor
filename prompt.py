@@ -23,17 +23,20 @@ RULE 1: ORIGINAL CONTENT AND ACCURACY
 - If any content is unreadable, do not guess. Clearly report the affected portion.
 
 CRITICAL SECTION BOUNDARY & PAGE CONTINUATION:
-- When a sentence, paragraph, or enacting formula continues onto the next page before the next section begins, it belongs to the PRECEDING section.
-- For example, if Section 1 (Preamble) continues onto the top of the next page with "The following rules have accordingly been enacted...", and Section 2 begins below it with "2. It is hereby declared...", that top enacting paragraph belongs to Section 1 (Preamble). NEVER attach text appearing before a section heading/number to that new section!
-- A section begins ONLY where its actual section number and marginal heading appear. Any preceding text belongs to the previous section or preamble.
+- When a sentence or paragraph continues onto the next page before the next section begins, it belongs to the PRECEDING section.
+- For example, if Section 1 continues onto the top of the next page with text before Section 2, and Section 2 begins below it with "2. Definitions...", that top paragraph belongs to Section 1. NEVER attach text appearing before a section heading/number to that new section!
+- A section begins ONLY where its actual section number and marginal heading appear. Any preceding text belongs to the previous section.
+- Ignore and discard any unnumbered introductory recitals, preambles, or enacting formulas appearing before Section 1.
 
 ================================================================================
 RULE 2: EXTRACTION SCOPE
 ================================================================================
-- Extract only the requested Act and section range.
+- Extract only the requested Act and statutory sections within range.
 - Include all inserted sections such as 2A, 5A, 8B, 14A, etc., appearing within that range.
-- If the complete Act is requested, extract all its statutory sections.
-- Exclude: Cover pages, Table of contents / Index pages, Publication details, Page numbers, Repeated page headers/footers, Watermarks (including IndiaCode watermarks), Editorial footnote comments at page bottoms (e.g. "1. Subs. by..."), Statement of Objects and Reasons.
+- If the complete Act is requested, extract all its statutory sections starting from Section 1.
+- EXCLUDE:
+  * PREAMBLE & RECITALS: DO NOT EXTRACT THE PREAMBLE! Introductory recitals (e.g. "WHEREAS Parliament is not in session...", "WHEREAS it is expedient to..."), enacting formulas (e.g. "BE it enacted by Parliament..."), and Long Titles (e.g. "An Act to...") are NOT statutory sections. DO NOT CREATE ANY JSON OBJECT FOR PREAMBLE!
+  * Cover pages, Table of contents / Index pages, Publication details, Page numbers, Repeated page headers/footers, Watermarks (including IndiaCode watermarks), Editorial footnote comments at page bottoms (e.g. "1. Subs. by..."), Statement of Objects and Reasons.
 - CRITICAL: DO NOT EXCLUDE STATE AMENDMENTS! State Amendments that appear under sections (e.g. "STATE AMENDMENT - Uttar Pradesh") are part of statutory law and MUST be extracted (see Rule 14)!
 - If the PDF contains multiple Acts, extract only the requested Act.
 
@@ -79,7 +82,9 @@ RULE 4: SECTION NUMBER AND SECTION NAME — ALWAYS CONVERT ROMAN TO ARABIC NUMER
 - Preserve the original section heading including its spelling and capitalization.
 - Remove the trailing full stop from the section heading.
 - If a section has no heading, do not invent one.
-- For Section 1 Preamble: use "section_no": "1" and "section_name": "Preamble" (or the printed marginal heading).
+- DO NOT EXTRACT THE PREAMBLE!
+  * Under NO circumstances should the Preamble, Long Title, or introductory recitals (e.g. "WHEREAS...", "Now, THEREFORE...") be extracted as a section or assigned to "section_no": "1".
+  * Section 1 must ALWAYS be the actual first statutory section (typically "Short title, extent and commencement" or "Short title and commencement"). Never create any JSON object for "Preamble".
 
 ================================================================================
 RULE 5: MANDATORY CLAUSE UNBUNDLING — ORDINARY CLAUSES ONLY!
@@ -273,7 +278,7 @@ RULE 10: EDITORIAL FOOTNOTES & REFERENCE NUMBERS (ABSOLUTELY NO FOOTNOTE DIGITS)
   "settlement,3" → "settlement,"
   "Government4" → "Government"
   "¹[(1)" → "[(1)" (in description) and "8(1)" (in sub_section_no)
-  "Preamble3" → "Preamble"
+  "Definitions3" → "Definitions"
   "³[the State Government]4" → "[the State Government]"
 - NEVER remove genuine statutory numbers:
   - Dates and years: e.g. "Regulation 44, 1793", "Act of 1886"
